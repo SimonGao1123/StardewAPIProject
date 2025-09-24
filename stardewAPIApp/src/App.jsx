@@ -1,24 +1,39 @@
 import { useEffect, useState } from 'react';
 import './App.css';
+import Calendar from './Calendar.jsx'
+import InputSection from './InputSection.jsx'
+import OutputSection from './OutputSection.jsx';
+
 
 export default function App () {
   // test fetching the entire API works for: https://stardewapi.co/api/crops
   const [cropData, setCropData] = useState([]);
   
-  useEffect(() => {
+  useEffect(() => { // use effect only runs ONCE due to empty array dependency
     fetch("https://stardewapi.co/api/crops")
-    .then((response) => {
+    .then (response => {
+      // received response from the promise, first check if response is valid and then turn to json to be readable
       if (!response.ok) {
-        throw new Error ("Error in obtaining response");
+        throw new Error ("Error in obtaining Response");
       }
-      return response.json();
+      return response.json(); // convert to json
     })
-    .then((data) => {
-      setCropData(data);
+    .then (data => {
+      // obtain response.json as data
+      setCropData(data); // set the crop data to data
     })
-    .catch(error => {
-      console.log("Error: " + error);
+    .catch (error => {
+      console.log("Error: " + error); // catch and log any errors
     })
   }, []);
-  console.log(cropData);
+  console.log(cropData); // testing purposes
+
+
+  return (
+    <>
+      <InputSection/>
+      <Calendar/>
+      <OutputSection/>
+    </>
+  );
 } 
