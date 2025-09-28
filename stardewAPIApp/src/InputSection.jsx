@@ -1,5 +1,5 @@
 import './App.css';
 
-export default function InputSection () {
+export default function InputSection (userOptions, setUserOptions) {
     
 }

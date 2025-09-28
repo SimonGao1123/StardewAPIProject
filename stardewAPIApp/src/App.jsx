@@ -29,9 +29,12 @@ export default function App () {
   console.log(cropData); // testing purposes
 
 
+  const [userOptions, setUserOptions] = useState({}); // holds all the data the user selected in InputSection 
+  const [calendarSquares, setCalendarSquares] = useState([]); // holds all the squares (28 in total) for the days in the month (each square is an object with data)
+  const [currentOutputData, setOutputData] = useState({}); // holds all relevent output data to be displayed in output section (altered throughout calendar section)
   return (
     <>
-      <InputSection/>
+      <InputSection userOptions={userOptions} setUserOptions={setUserOptions}/>
       <Calendar/>
       <OutputSection/>
     </>
