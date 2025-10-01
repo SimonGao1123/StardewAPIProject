@@ -1,5 +1,5 @@
 import './App.css';
 
-export default function Calendar () {
+export default function Calendar ({calendarSquares, setCalendarSquares}) {
     
 }

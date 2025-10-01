@@ -18,6 +18,14 @@ const defaultOptions = {
     kegs: 0,
     preservesJars: 0
 };
+
+// =========TODO=========
+const defaultCalendarSquare = {
+  planted_crops: [],
+  harvest_crops: [],
+
+}; 
+const calendarArray = Array.from({length: 28}, ()=>({...defaultCalendarSquare}));
 export default function App () {
   // test fetching the entire API works for: https://stardewapi.co/api/crops
   const [cropData, setCropData] = useState([]);
@@ -44,21 +52,32 @@ export default function App () {
   
   const [userOptions, setUserOptions] = useState(() => {
     const savedOptions = localStorage.getItem("user_options");
-    return savedOptions ? JSON.parse(savedOptions) : defaultOptions;  
-  }); // holds all the data the user selected in InputSection 
+    return savedOptions ? JSON.parse(savedOptions) : defaultOptions;
+  }); // holds all the data the user selected in InputSection (takes from local storage if prev saved)
   
   useEffect(() => {
     localStorage.setItem("user_options", JSON.stringify(userOptions)); // saves user options in local storage
   }, [userOptions]); // only save if user options had changed
+  // basically useEffect does:
+    // it will only run the code in its body if the items in the array given as 2nd parameter had CHANGED from the LAST RENDER 
   
-  const [calendarSquares, setCalendarSquares] = useState([]); // holds all the squares (28 in total) for the days in the month (each square is an object with data)
+  const [calendarSquares, setCalendarSquares] = useState(() => {
+    const savedCalendar = localStorage.getItem("calendar_squares");
+    return savedCalendar ? JSON.parse(savedCalendar) : calendarArray;
+  }); // holds all the squares (28 in total) for the days in the month (each square is an object with data)
+  
+  useEffect(() => {
+    localStorage.setItem("calendar_squares", JSON.stringify(calendarSquares));
+  }, [calendarSquares]); // add to localstorage if calnedarsquares changed
+  
   const [currentOutputData, setOutputData] = useState({}); // holds all relevent output data to be displayed in output section (altered throughout calendar section)
   
-  console.log(userOptions); // TESTING INPUT SELECTION
+
+  console.log(calendarSquares); // TESTING CALENDAR SECTION
   return (
     <>
       <InputSection userOptions={userOptions} setUserOptions={setUserOptions}/>
-      <Calendar/>
+      <Calendar calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares}/>
       <OutputSection/>
     </>
   );
