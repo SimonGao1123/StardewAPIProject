@@ -4,7 +4,20 @@ import Calendar from './Calendar.jsx'
 import InputSection from './InputSection.jsx'
 import OutputSection from './OutputSection.jsx';
 
-
+const defaultOptions = {
+  // default states for user options in inputSection:
+    season: "spring",
+    farmingLevel: 1,
+    sprinklers: {
+      normal: 0,
+      quality: 0,
+      iridium: 0
+    },
+    tillerProf: false,
+    artisanProf: false,
+    kegs: 0,
+    preservesJars: 0
+};
 export default function App () {
   // test fetching the entire API works for: https://stardewapi.co/api/crops
   const [cropData, setCropData] = useState([]);
@@ -28,21 +41,15 @@ export default function App () {
     })
   }, []);
 
-
-  const [userOptions, setUserOptions] = useState({
-    // default states:
-    season: "spring",
-    farmingLevel: 1,
-    sprinklers: {
-      normal: 0,
-      quality: 0,
-      iridium: 0
-    },
-    tillerProf: false,
-    artisanProf: false,
-    kegs: 0,
-    preservesJars: 0
+  
+  const [userOptions, setUserOptions] = useState(() => {
+    const savedOptions = localStorage.getItem("user_options");
+    return savedOptions ? JSON.parse(savedOptions) : defaultOptions;  
   }); // holds all the data the user selected in InputSection 
+  
+  useEffect(() => {
+    localStorage.setItem("user_options", JSON.stringify(userOptions)); // saves user options in local storage
+  }, [userOptions]); // only save if user options had changed
   
   const [calendarSquares, setCalendarSquares] = useState([]); // holds all the squares (28 in total) for the days in the month (each square is an object with data)
   const [currentOutputData, setOutputData] = useState({}); // holds all relevent output data to be displayed in output section (altered throughout calendar section)

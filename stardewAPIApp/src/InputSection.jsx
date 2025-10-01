@@ -34,7 +34,7 @@ function SeasonSelection ({userOptions, setUserOptions}) {
             <select id="season-select" onChange={(e)=>{
                 const tempOptionCopy = {...userOptions, season:e.target.value};
                 setUserOptions(tempOptionCopy);
-            }}>
+            }} value={userOptions.season}>
                 <option value="spring">Spring</option>
                 <option value="summer">Summer</option>
                 <option value="fall">Fall</option>
@@ -115,13 +115,13 @@ function ProfessionSelection ({userOptions, setUserOptions}) {
     return (
         <>
             <label htmlFor="tiller-profession">Tiller Profession (+10% Sell Value for Crops)</label>
-            <input id="tiller-profession" type="checkbox" 
+            <input id="tiller-profession" type="checkbox" checked={userOptions.tillerProf}
             onChange={(e) => {
                 setUserOptions({...userOptions, tillerProf: e.target.checked});
             }}/>
 
             <label htmlFor="artisan-profession">Artisan Profession (+40% Sell Value for Wine/Jam/Pickels)</label>
-            <input id="artisan-profession" type="checkbox" 
+            <input id="artisan-profession" type="checkbox" checked={userOptions.artisanProf}
             onChange={(e) => {
                 setUserOptions({...userOptions, artisanProf: e.target.checked});
             }}/>
