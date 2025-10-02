@@ -3,6 +3,7 @@ import './App.css';
 import Calendar from './Calendar.jsx'
 import InputSection from './InputSection.jsx'
 import OutputSection from './OutputSection.jsx';
+import buyPrices from './seedPrices.jsx';
 
 const defaultOptions = {
   // default states for user options in inputSection:
@@ -25,7 +26,9 @@ const defaultCalendarSquare = {
   harvest_crops: [],
 
 }; 
-const calendarArray = Array.from({length: 28}, ()=>({...defaultCalendarSquare}));
+
+
+const calendarArray = Array.from({length: 28}, ()=>({...defaultCalendarSquare})); // holds all 28 squares for a season
 export default function App () {
   // test fetching the entire API works for: https://stardewapi.co/api/crops
   const [cropData, setCropData] = useState([]);
@@ -41,15 +44,18 @@ export default function App () {
     })
     .then (data => {
       // obtain response.json as data
-      setCropData(data); // set the crop data to data
-      console.log(data);
+      const combinedData = data.map((plant, index) => {
+        return {...plant, seed_price: buyPrices[index+1]};
+      }); // adds buy prices to seeds
+      setCropData(combinedData); // set the crop data to data
+      console.log(combinedData);
     })
     .catch (error => {
       console.log("Error: " + error); // catch and log any errors
     })
   }, []);
 
-  
+  // INPUT SECTION USESTATE
   const [userOptions, setUserOptions] = useState(() => {
     const savedOptions = localStorage.getItem("user_options");
     return savedOptions ? JSON.parse(savedOptions) : defaultOptions;
@@ -61,6 +67,8 @@ export default function App () {
   // basically useEffect does:
     // it will only run the code in its body if the items in the array given as 2nd parameter had CHANGED from the LAST RENDER 
   
+  
+  // CALENDAR USESTATE
   const [calendarSquares, setCalendarSquares] = useState(() => {
     const savedCalendar = localStorage.getItem("calendar_squares");
     return savedCalendar ? JSON.parse(savedCalendar) : calendarArray;
@@ -68,7 +76,7 @@ export default function App () {
   
   useEffect(() => {
     localStorage.setItem("calendar_squares", JSON.stringify(calendarSquares));
-  }, [calendarSquares]); // add to localstorage if calnedarsquares changed
+  }, [calendarSquares]); // add to localstorage if calendar has changed
   
   const [currentOutputData, setOutputData] = useState({}); // holds all relevent output data to be displayed in output section (altered throughout calendar section)
   
@@ -77,7 +85,7 @@ export default function App () {
   return (
     <>
       <InputSection userOptions={userOptions} setUserOptions={setUserOptions}/>
-      <Calendar calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares}/>
+      <Calendar calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} userOptions={userOptions} setUserOptions={setUserOptions} cropData={cropData}/>
       <OutputSection/>
     </>
   );
