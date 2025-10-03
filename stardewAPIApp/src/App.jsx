@@ -3,7 +3,9 @@ import './App.css';
 import Calendar from './Calendar.jsx'
 import InputSection from './InputSection.jsx'
 import OutputSection from './OutputSection.jsx';
-import buyPrices from './seedPrices.jsx';
+import buyPrices from './extra-data/seedPrices.jsx';
+import fertilizerData from './extra-data/fertilizerData.jsx';
+import sprinklerData from './extra-data/sprinklerData.jsx';
 
 const defaultOptions = {
   // default states for user options in inputSection:
@@ -28,7 +30,7 @@ const defaultCalendarSquare = {
 }; 
 
 
-const calendarArray = Array.from({length: 28}, ()=>({...defaultCalendarSquare})); // holds all 28 squares for a season
+const calendarArray = Array.from({length: 28}, (_, index)=>({...defaultCalendarSquare, id: index})); // holds all 28 squares for a season
 export default function App () {
   // test fetching the entire API works for: https://stardewapi.co/api/crops
   const [cropData, setCropData] = useState([]);
@@ -82,11 +84,16 @@ export default function App () {
   
 
   console.log(calendarSquares); // TESTING CALENDAR SECTION
+  console.log(userOptions);
   return (
     <>
       <InputSection userOptions={userOptions} setUserOptions={setUserOptions}/>
-      <Calendar calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} userOptions={userOptions} setUserOptions={setUserOptions} cropData={cropData}/>
+      <Calendar calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} userOptions={userOptions} setUserOptions={setUserOptions} cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData}/>
       <OutputSection/>
+      <button onClick={()=>{
+        localStorage.clear();
+        window.location.reload(); // clears local storage and reloads window
+        }}>RESET</button>
     </>
   );
 } 
