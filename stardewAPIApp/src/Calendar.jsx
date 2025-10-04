@@ -2,13 +2,58 @@ import './App.css';
 import { useEffect, useState } from "react";
 export default function Calendar ({calendarSquares, setCalendarSquares, userOptions, cropData, sprinklerData, fertilizerData}) {
 
-    return <AddCropPopUp dayNumber={1} season={userOptions.season} cropData={cropData} calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} fertilizerData={fertilizerData}/>
+    const CalendarDisplay = [];
+    for (let i = 0; i < calendarSquares.length; i++) {
+        CalendarDisplay.push(<CalendarSquare key={i} dayNumber={i+1} calendarInfo={calendarSquares[i]}/>);
+    }
+    return (
+    <>
+        <AddCropPopUp dayNumber={1} season={userOptions.season} cropData={cropData} calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} fertilizerData={fertilizerData}/>
+        {CalendarDisplay}
+    </>
+    );
     // TEST ONLY FOR DAY 1 CALENDAR SQUARE SO FAR
+
+    
 }
 
 // overlay when clicked on a calendar square
-function CalendarDayOverlay () {
+function CalendarSquare ({dayNumber, calendarInfo}) {
+    // Takes dayNumber, int and calendarInfo, object
+    const {planted_crops, harvest_crops} = calendarInfo;
+    const plantedCrops = [];
+    const harvestedCrops = [];
 
+    for (const cropData of planted_crops) {
+        plantedCrops.push(
+            <li key={cropData.id}>
+                {nameNormalizer(cropData.crop.name)} x {cropData.numberPlanted}
+            </li>
+        );
+    }
+    
+    for (const cropData of harvest_crops) {
+        harvestedCrops.push(
+            <li key={cropData.id}>
+                {nameNormalizer(cropData.crop.name)} x {cropData.numberPlanted}
+            </li>
+        );
+    }
+    
+    return (
+        <div className="calendar-square">
+            <p>DAY: {dayNumber}</p>
+            <label>Planted Crops</label>
+            <ul className="calendar-square-plantedCrops">
+                {plantedCrops}
+            </ul>
+
+            <label>Harvested Crops</label>
+            <ul className="calendar-square-harvestedCrops">
+                {harvestedCrops}
+            </ul>
+        </div>
+    );
 }
 
 function AddCropPopUp ({dayNumber, season, cropData, calendarSquares, setCalendarSquares, fertilizerData}) {
@@ -54,7 +99,8 @@ const addCropCalendarSquare = (dayNumber, crop, numberOfCrops, fertilizerType, p
         crop: crop,
         dayPlanted: dayNumber,
         numberPlanted: numberOfCrops,
-        fertilizer: fertilizerType
+        fertilizer: fertilizerType,
+        id: calendarSquares[dayNumber-1].planted_crops.length
     }; // data for new plant added (planting)
     /*
     crop = object, from cropData 
