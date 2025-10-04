@@ -12,3 +12,6 @@
     overflow-y: scroll;
     list-style: none;
 }
+.selected-day {
+    background-color: lightblue;
+}

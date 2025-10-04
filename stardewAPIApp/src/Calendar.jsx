@@ -1,14 +1,14 @@
 import './App.css';
 import { useEffect, useState } from "react";
 export default function Calendar ({calendarSquares, setCalendarSquares, userOptions, cropData, sprinklerData, fertilizerData}) {
-
+    const [dayNumberSelected, setDaySelected] = useState(1); // for determining which day cropadd will target 
     const CalendarDisplay = [];
     for (let i = 0; i < calendarSquares.length; i++) {
-        CalendarDisplay.push(<CalendarSquare key={i} dayNumber={i+1} calendarInfo={calendarSquares[i]}/>);
+        CalendarDisplay.push(<CalendarSquare key={i} setDaySelected={setDaySelected} dayNumberSelected={dayNumberSelected} dayNumber={i+1} calendarInfo={calendarSquares[i]}/>);
     }
     return (
     <>
-        <AddCropPopUp dayNumber={1} season={userOptions.season} cropData={cropData} calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} fertilizerData={fertilizerData}/>
+        <AddCropPopUp dayNumber={dayNumberSelected} season={userOptions.season} cropData={cropData} calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} fertilizerData={fertilizerData}/>
         {CalendarDisplay}
     </>
     );
@@ -18,7 +18,7 @@ export default function Calendar ({calendarSquares, setCalendarSquares, userOpti
 }
 
 // overlay when clicked on a calendar square
-function CalendarSquare ({dayNumber, calendarInfo}) {
+function CalendarSquare ({setDaySelected, dayNumberSelected, dayNumber, calendarInfo}) {
     // Takes dayNumber, int and calendarInfo, object
     const {planted_crops, harvest_crops} = calendarInfo;
     const plantedCrops = [];
@@ -41,7 +41,8 @@ function CalendarSquare ({dayNumber, calendarInfo}) {
     }
     
     return (
-        <div className="calendar-square">
+        <div onClick={()=>setDaySelected(dayNumber)} className={dayNumberSelected === dayNumber ? "calendar-square selected-day" : "calendar-square"}>
+
             <p>DAY: {dayNumber}</p>
             <label>Planted Crops</label>
             <ul className="calendar-square-plantedCrops">
@@ -70,6 +71,7 @@ function AddCropPopUp ({dayNumber, season, cropData, calendarSquares, setCalenda
     return (
     <>
         <div id="add-crop-popup">
+            <p>For Day: {dayNumber}</p>
             <SelectCropType season={season} cropData={cropData} setCropSelected={setCropSelected} cropSelected={cropSelected}/>
             <label htmlFor="number_of_crops">Number of Crops</label>
             <input id="number_of_crops" type="number" min="1" step="1" value={numberOfCrops} onChange={(e) => setNumCrops(parseInt(e.target.value))}/> 
