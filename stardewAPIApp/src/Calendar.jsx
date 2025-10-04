@@ -1,8 +1,8 @@
 import './App.css';
 import { useEffect, useState } from "react";
-export default function Calendar ({calendarSquares, setCalendarSquares, userOptions, setUserOptions, cropData, sprinklerData, fertilizerData}) {
+export default function Calendar ({calendarSquares, setCalendarSquares, userOptions, cropData, sprinklerData, fertilizerData}) {
 
-    return <AddCropPopUp dayNumber={1} season={userOptions.season} cropData={cropData} fertilizerData={fertilizerData}/>
+    return <AddCropPopUp dayNumber={1} season={userOptions.season} cropData={cropData} calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} fertilizerData={fertilizerData}/>
     // TEST ONLY FOR DAY 1 CALENDAR SQUARE SO FAR
 }
 
@@ -63,8 +63,39 @@ const addCropCalendarSquare = (dayNumber, crop, numberOfCrops, fertilizerType, p
     fertilizer = object, from fertilizerData
     */  
 
-    
-    console.log (newPlantAdd); // TESTING, add calendar square representing day 1 
+    setCalendarSquares (prev => {
+        // TODO: OPTIMIZE SET CALENDAR SQUARES SECTION
+        const newSquares = [...prev];
+        const newPlantSquare = {...newSquares[dayNumber-1]}; // copies of object/whole array
+        
+        newPlantSquare.planted_crops = [...newPlantSquare.planted_crops, newPlantAdd];
+        newSquares[dayNumber-1] = newPlantSquare;
+        // adds to planted crops 
+
+        const daysToGrow = newPlantAdd.crop.daysToGrow;
+        const regrowthDays = newPlantAdd.crop.regrowth;
+
+        let dayCounter = daysToGrow + dayNumber - 2; // looks at 0 index, so minus 1
+        if (dayCounter > 27) {
+            return newSquares;
+        }
+        const newHarvestSquare = {...newSquares[dayCounter]};
+        newHarvestSquare.harvest_crops = [...newHarvestSquare.harvest_crops, newPlantAdd];
+        newSquares[dayCounter] = newHarvestSquare;
+
+        if (regrowthDays) {
+            dayCounter += regrowthDays;
+            while (dayCounter <= 27) {
+                const newRegrowthSquare = {...newSquares[dayCounter]};
+                newRegrowthSquare.harvest_crops = [...newRegrowthSquare.harvest_crops, newPlantAdd];
+                newSquares[dayCounter] = newRegrowthSquare;
+                dayCounter+=regrowthDays;
+            }
+        }
+        
+
+        return newSquares;
+    });
 
 }
 function SelectCropType ({season, cropData, setCropSelected, cropSelected}) {
@@ -93,7 +124,7 @@ function SelectCropType ({season, cropData, setCropSelected, cropSelected}) {
     )
 }
 const nameNormalizer = (name) => {
-        return name.split("_").map((word) => {
-            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-        }).join(" ");
+    return name.split("_").map((word) => {
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    }).join(" ");
 }

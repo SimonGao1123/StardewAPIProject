@@ -84,11 +84,10 @@ export default function App () {
   
 
   console.log(calendarSquares); // TESTING CALENDAR SECTION
-  console.log(userOptions);
   return (
     <>
       <InputSection userOptions={userOptions} setUserOptions={setUserOptions}/>
-      <Calendar calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} userOptions={userOptions} setUserOptions={setUserOptions} cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData}/>
+      <Calendar calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} userOptions={userOptions} cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData}/>
       <OutputSection/>
       <button onClick={()=>{
         localStorage.clear();
