@@ -1,14 +1,15 @@
 import './App.css';
 import { useEffect, useState } from "react";
 export default function Calendar ({calendarSquares, setCalendarSquares, userOptions, cropData, sprinklerData, fertilizerData}) {
-    const [dayNumberSelected, setDaySelected] = useState(1); // for determining which day cropadd will target 
+    const [dayNumberSelected, setDaySelected] = useState(null); // for determining which day cropadd will target, if it is null then no day selected and popup should disappear
     const CalendarDisplay = [];
     for (let i = 0; i < calendarSquares.length; i++) {
         CalendarDisplay.push(<CalendarSquare key={i} setDaySelected={setDaySelected} dayNumberSelected={dayNumberSelected} dayNumber={i+1} calendarInfo={calendarSquares[i]}/>);
     }
     return (
     <>
-        <AddCropPopUp dayNumber={dayNumberSelected} season={userOptions.season} cropData={cropData} calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} fertilizerData={fertilizerData}/>
+        {dayNumberSelected ? <AddCropPopUp setDaySelected={setDaySelected} dayNumber={dayNumberSelected} season={userOptions.season} cropData={cropData} calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} fertilizerData={fertilizerData}/> 
+        : <p>No Day Selected</p>}
         {CalendarDisplay}
     </>
     );
@@ -17,7 +18,7 @@ export default function Calendar ({calendarSquares, setCalendarSquares, userOpti
     
 }
 
-// overlay when clicked on a calendar square
+// Information in each day on the calendar
 function CalendarSquare ({setDaySelected, dayNumberSelected, dayNumber, calendarInfo}) {
     // Takes dayNumber, int and calendarInfo, object
     const {planted_crops, harvest_crops} = calendarInfo;
@@ -26,7 +27,7 @@ function CalendarSquare ({setDaySelected, dayNumberSelected, dayNumber, calendar
 
     for (const cropData of planted_crops) {
         plantedCrops.push(
-            <li key={cropData.id}>
+            <li key={`planted-${cropData.id}`}>
                 {nameNormalizer(cropData.crop.name)} x {cropData.numberPlanted}
             </li>
         );
@@ -34,14 +35,14 @@ function CalendarSquare ({setDaySelected, dayNumberSelected, dayNumber, calendar
     
     for (const cropData of harvest_crops) {
         harvestedCrops.push(
-            <li key={cropData.id}>
+            <li key={`harvested-${cropData.id}`}>
                 {nameNormalizer(cropData.crop.name)} x {cropData.numberPlanted}
             </li>
         );
     }
-    
+    // if click on the square twice will deselect the day
     return (
-        <div onClick={()=>setDaySelected(dayNumber)} className={dayNumberSelected === dayNumber ? "calendar-square selected-day" : "calendar-square"}>
+        <div onClick={()=>dayNumberSelected===dayNumber ? setDaySelected(null) : setDaySelected(dayNumber)} className={dayNumberSelected === dayNumber ? "calendar-square selected-day" : "calendar-square"}>
 
             <p>DAY: {dayNumber}</p>
             <label>Planted Crops</label>
@@ -57,7 +58,8 @@ function CalendarSquare ({setDaySelected, dayNumberSelected, dayNumber, calendar
     );
 }
 
-function AddCropPopUp ({dayNumber, season, cropData, calendarSquares, setCalendarSquares, fertilizerData}) {
+// popup display
+function AddCropPopUp ({setDaySelected, dayNumber, season, cropData, calendarSquares, setCalendarSquares, fertilizerData}) {
     const [cropSelected, setCropSelected] = useState(0); // CROP ID, makes searching cropData much faster
     const [numberOfCrops, setNumCrops] = useState(1);
     const [fertSelected, setFertSelected] = useState(0); // FERTILIZER ID, auto chooses no fertilizer (if select value == 0 then none was chosen)
@@ -65,44 +67,92 @@ function AddCropPopUp ({dayNumber, season, cropData, calendarSquares, setCalenda
     const fertilizerOptions = [];
     for (const fertilizer of fertilizerData) {
         fertilizerOptions.push(
-            <option key={fertilizer.name} value={fertilizer.id}>{nameNormalizer(fertilizer.name)}</option>
+            <option key={fertilizer.id} value={fertilizer.id}>{nameNormalizer(fertilizer.name)}</option>
         );
     }
     return (
     <>
         <div id="add-crop-popup">
-            <p>For Day: {dayNumber}</p>
-            <SelectCropType season={season} cropData={cropData} setCropSelected={setCropSelected} cropSelected={cropSelected}/>
-            <label htmlFor="number_of_crops">Number of Crops</label>
-            <input id="number_of_crops" type="number" min="1" step="1" value={numberOfCrops} onChange={(e) => setNumCrops(parseInt(e.target.value))}/> 
+            <div id="top-section-popup">
+                <p>For Day: {dayNumber}</p>
+                <button id="exit-popup" onClick={()=>setDaySelected(null)}>X</button>
+            </div>
+            <div id="crop-query-popup">
+                <SelectCropType season={season} cropData={cropData} setCropSelected={setCropSelected} cropSelected={cropSelected}/>
+                <label htmlFor="number_of_crops">Number of Crops</label>
+                <input id="number_of_crops" type="number" min="1" step="1" value={numberOfCrops} onChange={(e) => setNumCrops(parseInt(e.target.value))}/> 
 
-            <select id="fertilizer-select" value={fertSelected} onChange={(e) => setFertSelected(parseInt(e.target.value))}>
-                <option key={"null"} value={0}>None</option>
-                {fertilizerOptions}
-            </select>
+                <select id="fertilizer-select" value={fertSelected} onChange={(e) => setFertSelected(parseInt(e.target.value))}>
+                    <option key={"none"} value={0}>None</option>
+                    {fertilizerOptions}
+                </select>
 
-            <button id="add-crop-btn" onClick ={() => addCropCalendarSquare(
-                dayNumber, 
-                cropData[cropSelected-1], 
-                numberOfCrops, 
-                fertSelected ? fertilizerData[fertSelected-1] : null, 
-                null, 
-                calendarSquares, 
-                setCalendarSquares)}>Add Crop</button>
+                <button id="add-crop-btn" onClick ={() => updateCalendarData(
+                    dayNumber, 
+                    cropData[cropSelected-1], 
+                    numberOfCrops, 
+                    fertSelected ? fertilizerData[fertSelected-1] : null, 
+                    null, 
+                    calendarSquares, 
+                    setCalendarSquares)}>Add Crop
+                </button>
+            </div>
+
+            <div id="existing-crops-popup">
+                <p>Planted Crops:</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th># Planted</th>
+                            <th>Fertilizer/Speed Gro</th>
+                            <th>Total Cost</th>
+                            <th>Time to Grow</th>
+                            <th># of harvests</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    </tbody>
+                    </table>
+                <p>Harvested Crops:</p>
+                <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th># Yield</th>
+                                <th>$ Earned</th>
+                                <th>$ Profit</th>
+                                <th>Time to Regrow</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            
+                        </tbody>
+                </table>
+            </div>
+
         </div>
     </>
 
     // IMPLEMENT METHOD OF SELLING LATER
     );
 }
-const addCropCalendarSquare = (dayNumber, crop, numberOfCrops, fertilizerType, prepType, calendarSquares, setCalendarSquares) => {
+
+// to be added within the table
+function DisplayPlantedCrops ({calendarSquares, dayNumber}) {
+    
+}
+const updateCalendarData = (dayNumber, crop, numberOfCrops, fertilizerType, prepType, calendarSquares, setCalendarSquares) => {
     // WILL ADD PREP TIME LATER
     const newPlantAdd = {
         crop: crop,
         dayPlanted: dayNumber,
         numberPlanted: numberOfCrops,
         fertilizer: fertilizerType,
-        id: calendarSquares[dayNumber-1].planted_crops.length
+        id: `${dayNumber}-${calendarSquares[dayNumber-1].planted_crops.length}`
     }; // data for new plant added (planting)
     /*
     crop = object, from cropData 
@@ -162,7 +212,7 @@ function SelectCropType ({season, cropData, setCropSelected, cropSelected}) {
     
     const listOfPossible = [];
     for (const plant of possiblePlants) {
-        listOfPossible.push(<option value={plant.id} key={plant.name}>{nameNormalizer(plant.name)}</option>);
+        listOfPossible.push(<option value={plant.id} key={plant.id}>{nameNormalizer(plant.name)}</option>);
         // HOLDS THE PLANT ID AS IT'S VALUE, 
     }
     return (
