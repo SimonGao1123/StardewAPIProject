@@ -2,8 +2,8 @@ INPUT SECTION:
 - auto-fill in sprinkler (can only do after data collected from calendar)
 
 CALENDAR:
-- build square (holds data for each square)
-- updates output data object
+- finish harvest section
 
 OUTPUT SECTION:
 - uses useroptions and output data object to update output
+- account for crops that give multiple crops per harvest
