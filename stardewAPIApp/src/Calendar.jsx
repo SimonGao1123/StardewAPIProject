@@ -89,12 +89,14 @@ function AddCropPopUp ({setDaySelected, dayNumber, season, cropData, calendarSqu
 
                 <button id="add-crop-btn" onClick ={() => updateCalendarData(
                     dayNumber, 
-                    cropData[cropSelected-1], 
+                    cropData.find(c => c.id===cropSelected), 
                     numberOfCrops, 
-                    fertSelected ? fertilizerData[fertSelected-1] : null, 
+                    fertSelected ? fertilizerData.find(f=>f.id===fertSelected) : null, 
                     null, 
                     calendarSquares, 
-                    setCalendarSquares)}>Add Crop
+                    setCalendarSquares,
+                    userOptions)}>
+                    Add Crop
                 </button>
             </div>
 
@@ -157,13 +159,13 @@ function DisplayPlantedCrops (calendarSquares, dayNumber) {
         let harvests = calculateRegrowthDays(cropData, dayNumber);
         
         displayRows.push(
-            <tr>
-                <td key={`planted-${dayNumber}-${cropData.id}-0`}>{nameNormalizer(cropData.crop.name)}</td>
-                <td key={`planted-${dayNumber}-${cropData.id}-1`}>{cropData.numberPlanted}</td>
-                <td key={`planted-${dayNumber}-${cropData.id}-2`}>{cropData.fertilizer?nameNormalizer(cropData.fertilizer.name):"None"}</td>
-                <td key={`planted-${dayNumber}-${cropData.id}-3`}>{totalPrice}</td>
-                <td key={`planted-${dayNumber}-${cropData.id}-4`}>{newDaysToGrow}</td>
-                <td key={`planted-${dayNumber}-${cropData.id}-5`}>{harvests}</td>
+            <tr key={`planted-${dayNumber}-${cropData.id}-0`}>
+                <td>{nameNormalizer(cropData.crop.name)}</td>
+                <td>{cropData.numberPlanted}</td>
+                <td>{cropData.fertilizer?nameNormalizer(cropData.fertilizer.name):"None"}</td>
+                <td>{totalPrice}</td>
+                <td>{newDaysToGrow}</td>
+                <td>{harvests}</td>
             </tr>
         );
     }
@@ -196,19 +198,15 @@ function DisplayPlantedCrops (calendarSquares, dayNumber) {
 }
 function DisplayHarvestedCrops (calendarSquares, dayNumber, userOptions) {
     const displayRows = [];
-    const {tillerProf,farmingLevel} = userOptions;
     const dayData = calendarSquares[dayNumber - 1].harvest_crops;
     for (const cropData of dayData) {
-        const {seed_price, sellPrices} = cropData.crop;
-        const sellPrice=Math.floor(priceCalculate(sellPrices.default, cropData.numberPlanted, farmingLevel, cropData.fertilizer, tillerProf));
-        const profit = sellPrice - cropData.numberPlanted * seed_price;
         displayRows.push(
-            <tr>
-                <td key={`harvested-${dayNumber}-${cropData.id}-0`}>{nameNormalizer(cropData.crop.name)}</td>
-                <td key={`harvested-${dayNumber}-${cropData.id}-1`}>{cropData.numberPlanted}</td>
-                <td key={`harvested-${dayNumber}-${cropData.id}-2`}>${sellPrice}</td>
-                <td key={`harvested-${dayNumber}-${cropData.id}-3`}>${profit}</td>
-                <td key={`harvested-${dayNumber}-${cropData.id}-4`}>{cropData.crop.regrowth?cropData.crop.regrowth:"N/A"}</td>
+            <tr key={`harvested-${dayNumber}-${cropData.id}-0`}>
+                <td>{nameNormalizer(cropData.crop.name)}</td>
+                <td>{cropData.numberPlanted}</td>
+                <td>${cropData.total_earned}</td>
+                <td>${cropData.profit}</td>
+                <td>{cropData.crop.regrowth?cropData.crop.regrowth:"N/A"}</td>
             </tr>
         );
     }
@@ -228,22 +226,25 @@ function priceCalculate (cropPrice, numberPlanted, farmingLevel, fertilizer, til
     }
     return price;
 }
-const updateCalendarData = (dayNumber, crop, numberOfCrops, fertilizerType, prepType, calendarSquares, setCalendarSquares) => {
+const updateCalendarData = (dayNumber, crop, numberOfCrops, fertilizerType, prepType, calendarSquares, setCalendarSquares, userOptions) => {
     // WILL ADD PREP TIME LATER
     const newPlantAdd = {
         crop: crop,
         dayPlanted: dayNumber,
         numberPlanted: numberOfCrops,
         fertilizer: fertilizerType,
-        id: `${dayNumber}-${calendarSquares[dayNumber-1].planted_crops.length}`
+        id: `plant-${dayNumber}-${calendarSquares[dayNumber-1].planted_crops.length}`
     }; // data for new plant added (planting)
-    /*
-    crop = object, from cropData 
-    dayPlanted = integer (day crop was initially planted)
-    numberPlanted = integer (# of crops planted)
-    fertilizer = object, from fertilizerData
-    */  
-
+    const {farmingLevel, tillerProf} = userOptions;
+    const sellValue = Math.floor(priceCalculate(crop.sellPrices.default, numberOfCrops, farmingLevel, fertilizerType, tillerProf));
+    const newHarvestAdd = {
+        crop: crop,
+        numberPlanted: numberOfCrops,
+        dayPlanted: dayNumber,
+        total_earned: sellValue,
+        profit: sellValue-crop.seed_price*numberOfCrops,
+        id: `harvest-${dayNumber}-${calendarSquares[dayNumber-1].planted_crops.length}`
+    }; // to be displayed in popup
     setCalendarSquares (prev => {
         // TODO: OPTIMIZE SET CALENDAR SQUARES SECTION
         const newSquares = [...prev];
@@ -264,14 +265,14 @@ const updateCalendarData = (dayNumber, crop, numberOfCrops, fertilizerType, prep
             return newSquares;
         }
         const newHarvestSquare = {...newSquares[dayCounter]};
-        newHarvestSquare.harvest_crops = [...newHarvestSquare.harvest_crops, newPlantAdd];
+        newHarvestSquare.harvest_crops = [...newHarvestSquare.harvest_crops, newHarvestAdd];
         newSquares[dayCounter] = newHarvestSquare;
 
         if (regrowth) {
             dayCounter += regrowth;
             while (dayCounter <= 27) {
                 const newRegrowthSquare = {...newSquares[dayCounter]};
-                newRegrowthSquare.harvest_crops = [...newRegrowthSquare.harvest_crops, newPlantAdd];
+                newRegrowthSquare.harvest_crops = [...newRegrowthSquare.harvest_crops, newHarvestAdd];
                 newSquares[dayCounter] = newRegrowthSquare;
                 dayCounter+=regrowth;
             }
