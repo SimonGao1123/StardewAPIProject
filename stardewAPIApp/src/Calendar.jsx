@@ -148,6 +148,12 @@ function DisplayPlantedCrops (calendarSquares, dayNumber) {
     const dayData = calendarSquares[dayNumber - 1].planted_crops;
     for (const cropData of dayData) {
         const totalPrice = `$${cropData.numberPlanted * cropData.crop.seed_price}`; // for that speicifc crop, will do output calculations in output calcution
+        let newDaysToGrow = cropData.crop.daysToGrow;
+        if (cropData.fertilizer && cropData.fertilizer ==="speed_grow") {
+            // speed gro
+            const {multiplier} = cropData.fertilizer;
+            newDaysToGrow = Math.floor(newDaysToGrow*multiplier);
+        }
         let harvests = calculateRegrowthDays(cropData, dayNumber);
         
         displayRows.push(
@@ -156,7 +162,7 @@ function DisplayPlantedCrops (calendarSquares, dayNumber) {
                 <td key={`planted-${dayNumber}-${cropData.id}-1`}>{cropData.numberPlanted}</td>
                 <td key={`planted-${dayNumber}-${cropData.id}-2`}>{cropData.fertilizer?nameNormalizer(cropData.fertilizer.name):"None"}</td>
                 <td key={`planted-${dayNumber}-${cropData.id}-3`}>{totalPrice}</td>
-                <td key={`planted-${dayNumber}-${cropData.id}-4`}>{cropData.crop.daysToGrow}</td>
+                <td key={`planted-${dayNumber}-${cropData.id}-4`}>{newDaysToGrow}</td>
                 <td key={`planted-${dayNumber}-${cropData.id}-5`}>{harvests}</td>
             </tr>
         );
@@ -164,14 +170,20 @@ function DisplayPlantedCrops (calendarSquares, dayNumber) {
     function calculateRegrowthDays(cropData, dayNumber) {
         const daysLeft = 28-dayNumber;
         const {daysToGrow, regrowth} = cropData.crop;
-        if (daysLeft < daysToGrow) {
+        let newDaysToGrow = daysToGrow;
+        if (cropData.fertilizer && cropData.fertilizer.type ==="speed_grow") {
+            // speed gro
+            const {multiplier} = cropData.fertilizer;
+            newDaysToGrow = Math.floor(newDaysToGrow*multiplier);
+        }
+        if (daysLeft < newDaysToGrow) {
             return 0;
         }
 
         if (regrowth && regrowth > 0) {
             // crops who regrow after first harvest
 
-            const remainingDays = daysLeft-daysToGrow;
+            const remainingDays = daysLeft-newDaysToGrow;
             const extraHarvests = Math.floor(remainingDays / regrowth);
             return 1 + extraHarvests;
         }
@@ -189,7 +201,7 @@ function DisplayHarvestedCrops (calendarSquares, dayNumber, userOptions) {
     for (const cropData of dayData) {
         const {seed_price, sellPrices} = cropData.crop;
         const sellPrice=Math.floor(priceCalculate(sellPrices.default, cropData.numberPlanted, farmingLevel, cropData.fertilizer, tillerProf));
-        const profit = sellPrice - cropData.numberPlanted * cropData.crop.seed_price;
+        const profit = sellPrice - cropData.numberPlanted * seed_price;
         displayRows.push(
             <tr>
                 <td key={`harvested-${dayNumber}-${cropData.id}-0`}>{nameNormalizer(cropData.crop.name)}</td>
@@ -242,8 +254,12 @@ const updateCalendarData = (dayNumber, crop, numberOfCrops, fertilizerType, prep
         // adds to planted crops 
 
         const {daysToGrow, regrowth} = newPlantAdd.crop;
+        let newDaysToGrow = daysToGrow;
+        if(fertilizerType && fertilizerType.type==="speed_grow") {
+            newDaysToGrow= Math.floor(newDaysToGrow*fertilizerType.multiplier)
+        }
 
-        let dayCounter = daysToGrow + dayNumber - 1; // looks at 0 index, so minus 1
+        let dayCounter = newDaysToGrow + dayNumber - 1; // looks at 0 index, so minus 1
         if (dayCounter > 27) {
             return newSquares;
         }
