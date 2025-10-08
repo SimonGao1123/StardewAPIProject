@@ -3,6 +3,7 @@ INPUT SECTION:
 
 CALENDAR:
 - finish harvest section
+- Take account of speedgrow speed increase
 
 OUTPUT SECTION:
 - uses useroptions and output data object to update output

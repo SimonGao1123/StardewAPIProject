@@ -102,7 +102,7 @@ function AddCropPopUp ({setDaySelected, dayNumber, season, cropData, calendarSqu
 
             <div id="existing-crops-popup">
                 <p>Planted Crops:</p>
-                <table>
+                <table id="planted-table-popup">
                     <thead>
                         <tr>
                             <th>Type</th>
@@ -110,16 +110,18 @@ function AddCropPopUp ({setDaySelected, dayNumber, season, cropData, calendarSqu
                             <th>Fertilizer/Speed Gro</th>
                             <th>Total Cost</th>
                             <th>Time to Grow</th>
-                            <th># of harvests</th>
+                            <th># of harvests</th> 
+                            <th></th>
+                            <th></th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        {DisplayPlantedCrops(calendarSquares, dayNumber)}
+                        {DisplayPlantedCrops(setCalendarSquares, calendarSquares, dayNumber)}
                     </tbody>
-                    </table>
+                </table>
                 <p>Harvested Crops:</p>
-                <table>
+                <table id="harvest-table-popup">
                         <thead>
                             <tr>
                                 <th>Type</th>
@@ -127,6 +129,7 @@ function AddCropPopUp ({setDaySelected, dayNumber, season, cropData, calendarSqu
                                 <th>$ Earned</th>
                                 <th>$ Profit</th>
                                 <th>Time to Regrow</th>
+                                
                             </tr>
                         </thead>
 
@@ -134,6 +137,7 @@ function AddCropPopUp ({setDaySelected, dayNumber, season, cropData, calendarSqu
                             {DisplayHarvestedCrops(calendarSquares, dayNumber, userOptions)}
                         </tbody>
                 </table>
+
             </div>
 
         </div>
@@ -144,7 +148,7 @@ function AddCropPopUp ({setDaySelected, dayNumber, season, cropData, calendarSqu
 }
 
 // to be added within the table
-function DisplayPlantedCrops (calendarSquares, dayNumber) {
+function DisplayPlantedCrops (setCalendarSquares, calendarSquares, dayNumber) {
     const displayRows = [];
 
     const dayData = calendarSquares[dayNumber - 1].planted_crops;
@@ -159,13 +163,15 @@ function DisplayPlantedCrops (calendarSquares, dayNumber) {
         let harvests = calculateRegrowthDays(cropData, dayNumber);
         
         displayRows.push(
-            <tr key={`planted-${dayNumber}-${cropData.id}-0`}>
+            <tr id="plant-data-popup" key={`planted-${dayNumber}-${cropData.id}-0`}>
                 <td>{nameNormalizer(cropData.crop.name)}</td>
                 <td>{cropData.numberPlanted}</td>
                 <td>{cropData.fertilizer?nameNormalizer(cropData.fertilizer.name):"None"}</td>
                 <td>{totalPrice}</td>
                 <td>{newDaysToGrow}</td>
                 <td>{harvests}</td>
+                <td><button onClick={() => deletePlant(cropData.plant_harvest_id, setCalendarSquares, calendarSquares)} key={`delete-btn-${cropData.id}`}>DELETE</button></td>
+                <td><button key={`edit-btn-${cropData.id}`}>EDIT</button></td>
             </tr>
         );
     }
@@ -196,6 +202,19 @@ function DisplayPlantedCrops (calendarSquares, dayNumber) {
     }
     return displayRows;
 }
+// DELETE BUTTON FUNCTION (CAN MAKE MORE EFFICIENT)
+function deletePlant (plantHarvestId, setCalendarSquares, calendarSquares) {
+    // deletes all plants with plantHarvestId given
+    const newSquares = calendarSquares.map(square => {
+        const planted_array = square.planted_crops.filter(plant=>plant.plant_harvest_id!==plantHarvestId);
+        const harvested_array = square.harvest_crops.filter(plant=>plant.plant_harvest_id!==plantHarvestId);
+        // filters all plants with that id
+        return {...square, planted_crops: planted_array, harvest_crops: harvested_array};
+    }); // go through each square and delete the elements in planted/harvest crops with the same planted-harvest pair id
+
+    setCalendarSquares(newSquares);
+}
+
 function DisplayHarvestedCrops (calendarSquares, dayNumber, userOptions) {
     const displayRows = [];
     const dayData = calendarSquares[dayNumber - 1].harvest_crops;
@@ -226,6 +245,7 @@ function priceCalculate (cropPrice, numberPlanted, farmingLevel, fertilizer, til
     }
     return price;
 }
+let plantPairID = 0; // for delete function, to be able to delete planted/harvest groups quickly
 const updateCalendarData = (dayNumber, crop, numberOfCrops, fertilizerType, prepType, calendarSquares, setCalendarSquares, userOptions) => {
     // WILL ADD PREP TIME LATER
     const newPlantAdd = {
@@ -233,7 +253,8 @@ const updateCalendarData = (dayNumber, crop, numberOfCrops, fertilizerType, prep
         dayPlanted: dayNumber,
         numberPlanted: numberOfCrops,
         fertilizer: fertilizerType,
-        id: `plant-${dayNumber}-${calendarSquares[dayNumber-1].planted_crops.length}`
+        id: `plant-${dayNumber}-${calendarSquares[dayNumber-1].planted_crops.length}`,
+        plant_harvest_id: plantPairID
     }; // data for new plant added (planting)
     const {farmingLevel, tillerProf} = userOptions;
     const sellValue = Math.floor(priceCalculate(crop.sellPrices.default, numberOfCrops, farmingLevel, fertilizerType, tillerProf));
@@ -243,10 +264,13 @@ const updateCalendarData = (dayNumber, crop, numberOfCrops, fertilizerType, prep
         dayPlanted: dayNumber,
         total_earned: sellValue,
         profit: sellValue-crop.seed_price*numberOfCrops,
-        id: `harvest-${dayNumber}-${calendarSquares[dayNumber-1].planted_crops.length}`
+        id: `harvest-${dayNumber}-${calendarSquares[dayNumber-1].planted_crops.length}`,
+        plant_harvest_id: plantPairID
     }; // to be displayed in popup
+    plantPairID++; 
+    // keep making new plant-harvest id's for quick access
+
     setCalendarSquares (prev => {
-        // TODO: OPTIMIZE SET CALENDAR SQUARES SECTION
         const newSquares = [...prev];
         const newPlantSquare = {...newSquares[dayNumber-1]}; // copies of object/whole array
         
