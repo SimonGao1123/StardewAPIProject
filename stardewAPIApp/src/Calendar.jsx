@@ -150,7 +150,7 @@ function AddCropPopUp ({cropEdit, setCropEdit, setDaySelected, dayNumber, season
                     </thead>
 
                     <tbody>
-                        {DisplayPlantedCrops(setCropEdit, setCalendarSquares, calendarSquares, dayNumber)}
+                        {DisplayPlantedCrops(setCropSelected, setNumCrops, setFertSelected, cropEdit, setCropEdit, setCalendarSquares, calendarSquares, dayNumber)}
                     </tbody>
                 </table>
                 <p>Harvested Crops:</p>
@@ -181,7 +181,7 @@ function AddCropPopUp ({cropEdit, setCropEdit, setDaySelected, dayNumber, season
 }
 
 // to be added within the table
-function DisplayPlantedCrops (setCropEdit, setCalendarSquares, calendarSquares, dayNumber) {
+function DisplayPlantedCrops (setCropSelected, setNumCrops, setFertSelected, cropEdit, setCropEdit, setCalendarSquares, calendarSquares, dayNumber) {
     const displayRows = [];
 
     const dayData = calendarSquares[dayNumber - 1].planted_crops;
@@ -211,7 +211,7 @@ function DisplayPlantedCrops (setCropEdit, setCalendarSquares, calendarSquares, 
                     setFertSelected(0);
                     setCropEdit(null);
                     }} key={`delete-btn-${cropData.id}`}>DELETE</button></td>
-                <td><button onClick={() => setCropEdit(cropData)} key={`edit-btn-${cropData.id}`}>EDIT</button></td>
+                <td><button onClick={() => cropEdit ? setCropEdit(null) : setCropEdit(cropData)} key={`edit-btn-${cropData.id}`}>{cropEdit ? "STOP EDIT" : "EDIT"}</button></td>
             </tr>
         );
     }
@@ -244,6 +244,7 @@ function DisplayPlantedCrops (setCropEdit, setCalendarSquares, calendarSquares, 
 }
 // DELETE BUTTON FUNCTION (CAN MAKE MORE EFFICIENT)
 function deletePlant (plantHarvestId, setCalendarSquares, calendarSquares, setCropEdit) {
+    setCropEdit(null); // stop editing crop if delete
     // deletes all plants with plantHarvestId given
     const newSquares = calendarSquares.map(square => {
         const planted_array = square.planted_crops.filter(plant=>plant.plant_harvest_id!==plantHarvestId);

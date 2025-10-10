@@ -1,7 +1,7 @@
 import './App.css';
 import { use, useState } from 'react';
 
-export default function InputSection ({userOptions, setUserOptions}) {
+export default function InputSection ({calendarSquares, userOptions, setUserOptions}) {
     // input section for all default options (how to calculate)
     return (
         <>
@@ -14,7 +14,7 @@ export default function InputSection ({userOptions, setUserOptions}) {
             </div>
 
             <div class="input-section-container" id="sprinklerSelection">
-                <SprinklerSelect userOptions={userOptions} setUserOptions={setUserOptions}/>
+                <SprinklerSelect calendarSquares={calendarSquares} userOptions={userOptions} setUserOptions={setUserOptions}/>
             </div>
 
             <div class="input-section-container" id="professionSelection">
@@ -64,10 +64,15 @@ function FarmingLevelSelect ({userOptions, setUserOptions}) {
 // - cannot do without access to calendar input information (FIRST DO CALENDAR)
 // - need to update materials list for output object
 // TEMPORARY: THE AUTOFILL BUTTON JUST SETS 100 TO SELECTED  QUALITY (needs to take total # of crops and divide by respective sprinkler water yield)
-function SprinklerSelect ({userOptions, setUserOptions}) {
-    const normalSprinklerYield = 4; // waters 4 plants PER sprinklers
-    const qualitySprinklerYield = 8; // waters 8 plants PER sprinklers
-    const iridiumSprinklerYield = 24; // waters 24 plants PER sprinklers
+function SprinklerSelect ({calendarSquares, userOptions, setUserOptions}) {
+    function calculateTotalCrops (calendarSquares) {
+        return calendarSquares.reduce((acc, currSquare) => {
+            return acc + currSquare.planted_crops.reduce((crops, crop) =>{
+                return crops + crop.numberPlanted;
+            }, 0);
+        }, 0);
+    }
+    const totalCrops = calculateTotalCrops(calendarSquares);
 
     return (
     <>
@@ -90,20 +95,17 @@ function SprinklerSelect ({userOptions, setUserOptions}) {
         <p>AutoFill Sprinkler Count?</p>
         <button value="normal" 
         onClick={()=>{
-            const newSprinklerCount = 100; // TEMPORARY (BUTTON SHOULD JUST TAKE # CROPS/SPRINKLER YIELD)
-            setUserOptions({...userOptions, sprinklers: {normal: newSprinklerCount, quality: 0, iridium: 0}})}
+            setUserOptions({...userOptions, sprinklers: {normal: Math.ceil(totalCrops/4), quality: 0, iridium: 0}})}
         }>
         Normal Sprinklers</button>
         <button value="quality"
         onClick={()=>{
-            const newSprinklerCount = 100; // TEMPORARY (BUTTON SHOULD JUST TAKE # CROPS/SPRINKLER YIELD)
-            setUserOptions({...userOptions, sprinklers: {normal: 0, quality: newSprinklerCount, iridium: 0}})}
+            setUserOptions({...userOptions, sprinklers: {normal: 0, quality: Math.ceil(totalCrops/8), iridium: 0}})}
         }>
         Quality Sprinklers</button>
         <button value="iridium"
         onClick={()=>{
-            const newSprinklerCount = 100; // TEMPORARY (BUTTON SHOULD JUST TAKE # CROPS/SPRINKLER YIELD)
-            setUserOptions({...userOptions, sprinklers: {normal: 0, quality: 0, iridium: newSprinklerCount}})} // sets all others to 0
+            setUserOptions({...userOptions, sprinklers: {normal: 0, quality: 0, iridium: Math.ceil(totalCrops/24)}})} // sets all others to 0
         }>
         Iridium Sprinklers</button>
     </>

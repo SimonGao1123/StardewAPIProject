@@ -26,7 +26,6 @@ const defaultOptions = {
 const defaultCalendarSquare = {
   planted_crops: [],
   harvest_crops: [],
-
 }; 
 
 
@@ -86,9 +85,9 @@ export default function App () {
   console.log(calendarSquares); // TESTING CALENDAR SECTION
   return (
     <>
-      <InputSection userOptions={userOptions} setUserOptions={setUserOptions}/>
+      <InputSection calendarSquares={calendarSquares} userOptions={userOptions} setUserOptions={setUserOptions}/>
       <Calendar calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} userOptions={userOptions} cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData}/>
-      <OutputSection/>
+      <OutputSection cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData} userOptions={userOptions} calendarSquares={calendarSquares}/>
       <button onClick={()=>{
         localStorage.clear();
         window.location.reload(); // clears local storage and reloads window
