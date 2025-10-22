@@ -69,25 +69,70 @@ export default function App () {
     // it will only run the code in its body if the items in the array given as 2nd parameter had CHANGED from the LAST RENDER 
   
   
-  // CALENDAR USESTATE
-  const [calendarSquares, setCalendarSquares] = useState(() => {
-    const savedCalendar = localStorage.getItem("calendar_squares");
-    return savedCalendar ? JSON.parse(savedCalendar) : calendarArray;
+  // CALENDAR USESTATE for all seasons
+  const [springCalendarSquares, setSpringSquares] = useState(() => {
+    const savedCalendar = localStorage.getItem("spring_calendar_squares");
+    return savedCalendar ? JSON.parse(savedCalendar) : [...calendarArray];
   }); // holds all the squares (28 in total) for the days in the month (each square is an object with data)
   
-  useEffect(() => {
-    localStorage.setItem("calendar_squares", JSON.stringify(calendarSquares));
-  }, [calendarSquares]); // add to localstorage if calendar has changed
-  
-  const [currentOutputData, setOutputData] = useState({}); // holds all relevent output data to be displayed in output section (altered throughout calendar section)
-  
+  const [summerCalendarSquares, setSummerSquares] = useState(() => {
+    const savedCalendar = localStorage.getItem("summer_calendar_squares");
+    return savedCalendar ? JSON.parse(savedCalendar) : [...calendarArray];
+  });
+  const [fallCalendarSquares, setFallSquares] = useState(() => {
+    const savedCalendar = localStorage.getItem("fall_calendar_squares");
+    return savedCalendar ? JSON.parse(savedCalendar) : [...calendarArray];
+  });
+  const [winterCalendarSquares, setWinterSquares] = useState(() => {
+    const savedCalendar = localStorage.getItem("winter_calendar_squares");
+    return savedCalendar ? JSON.parse(savedCalendar) : [...calendarArray];
+  });
 
-  console.log(calendarSquares); // TESTING CALENDAR SECTION
+  useEffect(() => {
+    localStorage.setItem("spring_calendar_squares", JSON.stringify(springCalendarSquares));
+    localStorage.setItem("summer_calendar_squares", JSON.stringify(summerCalendarSquares));
+    localStorage.setItem("fall_calendar_squares", JSON.stringify(fallCalendarSquares));
+    localStorage.setItem("winter_calendar_squares", JSON.stringify(winterCalendarSquares));
+  }, [springCalendarSquares, summerCalendarSquares, fallCalendarSquares, winterCalendarSquares]); // add to localstorage if calendar has changed  
+
+  console.log(springCalendarSquares); // TESTING CALENDAR SECTION
+  console.log(summerCalendarSquares); // TESTING CALENDAR SECTION
+  console.log(fallCalendarSquares); // TESTING CALENDAR SECTION
+  console.log(winterCalendarSquares); // TESTING CALENDAR SECTION
+
+  function correctSquaresSelection () {
+    switch (userOptions.season) {
+      case "spring":
+        return springCalendarSquares;
+      case "summer":
+        return summerCalendarSquares;
+      case "fall":
+        return fallCalendarSquares;
+      case "winter":
+        return winterCalendarSquares;
+      default:
+        console.log("Error in season selection");
+    }
+  }
+  function correctSetSquaresSelection () {
+    switch (userOptions.season) {
+      case "spring":
+        return setSpringSquares;
+      case "summer":
+        return setSummerSquares;
+      case "fall":
+        return setFallSquares;
+      case "winter":
+        return setWinterSquares;
+      default:
+        console.log("Error in season selection");
+    }
+  }
   return (
     <>
-      <InputSection calendarSquares={calendarSquares} userOptions={userOptions} setUserOptions={setUserOptions}/>
-      <Calendar calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} userOptions={userOptions} cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData}/>
-      <OutputSection cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData} userOptions={userOptions} calendarSquares={calendarSquares}/>
+      <InputSection calendarSquares={correctSquaresSelection()} userOptions={userOptions} setUserOptions={setUserOptions}/>
+      <Calendar calendarSquares={correctSquaresSelection()} setCalendarSquares={correctSetSquaresSelection()} userOptions={userOptions} cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData}/>
+      <OutputSection cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData} userOptions={userOptions} calendarSquares={correctSquaresSelection()}/>
       <button onClick={()=>{
         localStorage.clear();
         window.location.reload(); // clears local storage and reloads window

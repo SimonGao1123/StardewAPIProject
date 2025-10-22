@@ -89,10 +89,12 @@ function TotalCropsDisplay ({calendarSquares, setTotalCrops}) {
             return crops + crop.numberPlanted;
         }, 0);
     }, 0);
-    setTotalCrops(totalCrops);
+    useEffect(() => {
+        setTotalCrops(totalCrops);
+    }, [totalCrops, setTotalCrops]);
     return (
         <>
-            <label for="total-num-crops-output">Total Number of Crops: </label>
+            <label htmlFor="total-num-crops-output">Total Number of Crops: </label>
             <input id="total-num-crops-output" value={totalCrops} readOnly/>
         </>
     );
@@ -100,7 +102,7 @@ function TotalCropsDisplay ({calendarSquares, setTotalCrops}) {
 function TotalProfit ({totalProfit}) {
     return (
         <>
-            <label for="total-profit-output">Total Profit: </label>
+            <label htmlFor="total-profit-output">Total Profit: </label>
             <input id="total-profit-output" value={`$${totalProfit}`} readOnly/>
         </>
     );

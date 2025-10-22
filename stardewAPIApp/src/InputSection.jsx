@@ -5,23 +5,23 @@ export default function InputSection ({calendarSquares, userOptions, setUserOpti
     // input section for all default options (how to calculate)
     return (
         <>
-            <div class="input-section-container" id="seasonSelection">
+            <div className="input-section-container" id="seasonSelection">
                 <SeasonSelection userOptions={userOptions} setUserOptions={setUserOptions}/>
             </div>
 
-            <div class="input-section-container" id="farmingLevelSelection">
+            <div className="input-section-container" id="farmingLevelSelection">
                 <FarmingLevelSelect userOptions={userOptions} setUserOptions={setUserOptions}/>
             </div>
 
-            <div class="input-section-container" id="sprinklerSelection">
+            <div className="input-section-container" id="sprinklerSelection">
                 <SprinklerSelect calendarSquares={calendarSquares} userOptions={userOptions} setUserOptions={setUserOptions}/>
             </div>
 
-            <div class="input-section-container" id="professionSelection">
+            <div className="input-section-container" id="professionSelection">
                 <ProfessionSelection userOptions={userOptions} setUserOptions={setUserOptions}/>
             </div>
 
-            <div class="input-section-container" id="kegspreservesSelection">
+            <div className="input-section-container" id="kegspreservesSelection">
                 <KegsAndPreservesSelection userOptions={userOptions} setUserOptions={setUserOptions}/>
             </div>
         </>
