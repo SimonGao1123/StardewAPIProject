@@ -237,6 +237,7 @@ const updateCalendarData = (dayNumber, crop, numberOfCrops, fertilizerType, prep
         fertilizer: fertilizerType,
         id: `${dayNumber}-${calendarSquares[dayNumber-1].planted_crops.length}`
     }; // data for new plant added (planting)
+
     /*
     crop = object, from cropData 
     dayPlanted = integer (day crop was initially planted)
