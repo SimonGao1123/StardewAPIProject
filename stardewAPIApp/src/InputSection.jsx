@@ -1,5 +1,5 @@
 import './App.css';
-import { use, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 
 export default function InputSection ({calendarSquares, userOptions, setUserOptions}) {
     // input section for all default options (how to calculate)
@@ -114,19 +114,43 @@ function SprinklerSelect ({calendarSquares, userOptions, setUserOptions}) {
 
 // selection if user has tiller and/or artisan profession (saves into userOption object)
 function ProfessionSelection ({userOptions, setUserOptions}) {
-    return (
-        <>
-            <label htmlFor="tiller-profession">Tiller Profession (+10% Sell Value for Crops)</label>
+    
+    const tillerProfession = (<><label htmlFor="tiller-profession">Tiller Profession (+10% Sell Value for Crops)</label>
             <input id="tiller-profession" type="checkbox" checked={userOptions.tillerProf}
             onChange={(e) => {
                 setUserOptions({...userOptions, tillerProf: e.target.checked});
+            }}/></>);
+        
+    const artisanOrAgriculture = (<><label htmlFor="artisan-profession">Artisan Profession (+40% Sell Value for Wine/Jam/Pickels)</label>
+            <input id="artisan-profession" type="radio" name="artisan-or-agriculture" 
+            onChange={(e) => {
+                if (e.target.checked) {
+                    setUserOptions({...userOptions, agricProf: false, artisanProf: true});
+                }
             }}/>
 
-            <label htmlFor="artisan-profession">Artisan Profession (+40% Sell Value for Wine/Jam/Pickels)</label>
-            <input id="artisan-profession" type="checkbox" checked={userOptions.artisanProf}
+            <label htmlFor="agriculture-profession">Agrilcurist Profession (-10% growth time)</label>
+            <input id="agriculture-profession" type="radio" name="artisan-or-agriculture" 
             onChange={(e) => {
-                setUserOptions({...userOptions, artisanProf: e.target.checked});
+                if (e.target.checked) {
+                    setUserOptions({...userOptions, agricProf: true, artisanProf: false});
+                }
             }}/>
+
+            <label htmlFor="none-profession">None</label>
+            <input id="none-profession" type="radio" name="artisan-or-agriculture" 
+            onChange={(e) => {
+                if (e.target.checked) {
+                    setUserOptions({...userOptions, agricProf: false, artisanProf: false});
+                }
+            }}/></>);
+
+    return (
+        <>
+            {userOptions.farmingLevel >= 5 ? tillerProfession : <></>}
+            {userOptions.farmingLevel === 10 ? artisanOrAgriculture : <></>}
+
+            
         </>
     );
        

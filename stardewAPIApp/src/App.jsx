@@ -18,6 +18,7 @@ const defaultOptions = {
     },
     tillerProf: false,
     artisanProf: false,
+    agricProf: false,
     kegs: 0,
     preservesJars: 0
 };
@@ -128,6 +129,7 @@ export default function App () {
         console.log("Error in season selection");
     }
   }
+  console.log(userOptions);
   return (
     <>
       <InputSection calendarSquares={correctSquaresSelection()} userOptions={userOptions} setUserOptions={setUserOptions}/>
