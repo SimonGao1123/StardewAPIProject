@@ -114,7 +114,12 @@ function SprinklerSelect ({calendarSquares, userOptions, setUserOptions}) {
 
 // selection if user has tiller and/or artisan profession (saves into userOption object)
 function ProfessionSelection ({userOptions, setUserOptions}) {
-    
+    if (userOptions.farmingLevel < 5 && userOptions.tillerProf) {
+        setUserOptions({...userOptions, tillerProf: false});
+    }
+    if (userOptions.farmingLevel < 10 && (userOptions.agricProf || userOptions.artisanProf)) {
+        setUserOptions({...userOptions, agricProf: false, artisanProf: false});
+    }
     const tillerProfession = (<><label htmlFor="tiller-profession">Tiller Profession (+10% Sell Value for Crops)</label>
             <input id="tiller-profession" type="checkbox" checked={userOptions.tillerProf}
             onChange={(e) => {

@@ -150,7 +150,7 @@ function AddCropPopUp ({cropEdit, setCropEdit, setDaySelected, dayNumber, season
                     </thead>
 
                     <tbody>
-                        {DisplayPlantedCrops(setCropSelected, setNumCrops, setFertSelected, cropEdit, setCropEdit, setCalendarSquares, calendarSquares, dayNumber)}
+                        {DisplayPlantedCrops(setCropSelected, setNumCrops, setFertSelected, cropEdit, setCropEdit, setCalendarSquares, calendarSquares, dayNumber, userOptions)}
                     </tbody>
                 </table>
                 <p>Harvested Crops:</p>
@@ -181,18 +181,22 @@ function AddCropPopUp ({cropEdit, setCropEdit, setDaySelected, dayNumber, season
 }
 
 // to be added within the table
-function DisplayPlantedCrops (setCropSelected, setNumCrops, setFertSelected, cropEdit, setCropEdit, setCalendarSquares, calendarSquares, dayNumber) {
+function DisplayPlantedCrops (setCropSelected, setNumCrops, setFertSelected, cropEdit, setCropEdit, setCalendarSquares, calendarSquares, dayNumber, userOptions) {
     const displayRows = [];
 
     const dayData = calendarSquares[dayNumber - 1].planted_crops;
     for (const cropData of dayData) {
         const totalPrice = `$${cropData.numberPlanted * cropData.crop.seed_price}`; // for that speicifc crop, will do output calculations in output calcution
         let newDaysToGrow = cropData.crop.daysToGrow;
-        if (cropData.fertilizer && cropData.fertilizer ==="speed_grow") {
+        if (cropData.fertilizer && cropData.fertilizer.type ==="speed_grow") {
             // speed gro
             const {multiplier} = cropData.fertilizer;
             newDaysToGrow = Math.floor(newDaysToGrow*multiplier);
         }
+        if (userOptions.agricProf) {
+            newDaysToGrow = Math.floor(newDaysToGrow*0.9);
+        }
+        console.log("Agriculture?: " + userOptions.agricProf);
         let harvests = calculateRegrowthDays(cropData, dayNumber);
         
         displayRows.push(
@@ -322,7 +326,10 @@ const updateCalendarData = (dayNumber, crop, numberOfCrops, fertilizerType, prep
         const {daysToGrow, regrowth} = newPlantAdd.crop;
         let newDaysToGrow = daysToGrow;
         if(fertilizerType && fertilizerType.type==="speed_grow") {
-            newDaysToGrow= Math.floor(newDaysToGrow*fertilizerType.multiplier)
+            newDaysToGrow= Math.floor(newDaysToGrow*fertilizerType.multiplier);
+        }
+        if (userOptions.agricProf) {
+            newDaysToGrow = Math.floor(newDaysToGrow*0.9); // agriculture profession
         }
 
         let dayCounter = newDaysToGrow + dayNumber - 1; // looks at 0 index, so minus 1
