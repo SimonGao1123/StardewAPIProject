@@ -1,7 +1,7 @@
 import './App.css';
 import { use, useEffect, useState } from 'react';
 
-export default function InputSection ({calendarSquares, userOptions, setUserOptions}) {
+export default function InputSection ({currCalendar, wholeCalendar, userOptions, setUserOptions}) {
     // input section for all default options (how to calculate)
     return (
         <>
@@ -14,7 +14,7 @@ export default function InputSection ({calendarSquares, userOptions, setUserOpti
             </div>
 
             <div className="input-section-container" id="sprinklerSelection">
-                <SprinklerSelect calendarSquares={calendarSquares} userOptions={userOptions} setUserOptions={setUserOptions}/>
+                <SprinklerSelect currCalendar={currCalendar} userOptions={userOptions} setUserOptions={setUserOptions}/>
             </div>
 
             <div className="input-section-container" id="professionSelection">
@@ -64,15 +64,15 @@ function FarmingLevelSelect ({userOptions, setUserOptions}) {
 // - cannot do without access to calendar input information (FIRST DO CALENDAR)
 // - need to update materials list for output object
 // TEMPORARY: THE AUTOFILL BUTTON JUST SETS 100 TO SELECTED  QUALITY (needs to take total # of crops and divide by respective sprinkler water yield)
-function SprinklerSelect ({calendarSquares, userOptions, setUserOptions}) {
-    function calculateTotalCrops (calendarSquares) {
-        return calendarSquares.reduce((acc, currSquare) => {
+function SprinklerSelect ({currCalendar, userOptions, setUserOptions}) {
+    function calculateTotalCrops (currCalendar) {
+        return currCalendar.reduce((acc, currSquare) => {
             return acc + currSquare.planted_crops.reduce((crops, crop) =>{
                 return crops + crop.numberPlanted;
             }, 0);
         }, 0);
     }
-    const totalCrops = calculateTotalCrops(calendarSquares);
+    const totalCrops = calculateTotalCrops(currCalendar);
 
     return (
     <>

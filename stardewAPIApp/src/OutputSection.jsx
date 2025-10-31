@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 
-export default function OutputSection ({cropData, sprinklerData, fertilizerData, userOptions, calendarSquares}) {
+export default function OutputSection ({cropData, sprinklerData, fertilizerData, userOptions, currCalendar, wholeCalendar}) {
     const [totalSpent, setTotalSpent] = useState(0);
     const [totalEarned, setTotalEarned] = useState(0);
     const [totalCrops, setTotalCrops] = useState(0);
     return (
         <>
             <div id="total-crops-section">
-                <TotalCropsDisplay calendarSquares={calendarSquares} setTotalCrops={setTotalCrops}/>
+                <TotalCropsDisplay calendarSquares={currCalendar} setTotalCrops={setTotalCrops}/>
             </div>
 
             <div id="profit-section">
@@ -16,11 +16,11 @@ export default function OutputSection ({cropData, sprinklerData, fertilizerData,
             </div>
 
             <div id="earned-section">
-                <TotalEarned calendarSquares={calendarSquares} setTotalEarned={setTotalEarned}/>
+                <TotalEarned calendarSquares={currCalendar} setTotalEarned={setTotalEarned}/>
             </div>
 
             <div id="spent-section">
-                <TotalSpent calendarSquares={calendarSquares} setTotalSpent={setTotalSpent}/>
+                <TotalSpent calendarSquares={currCalendar} setTotalSpent={setTotalSpent}/>
             </div>
 
             <div id="unwatered-section">
