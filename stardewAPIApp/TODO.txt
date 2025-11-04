@@ -3,7 +3,7 @@ INPUT SECTION:
 
 CALENDAR:
 - keg functionality (ask for how to prepare crop)
+- make it so crops that grow in multiple seasons can carry other to the following seasons
 
 OUTPUT SECTION:
 - uses useroptions and output data object to update output
-- account for crops that give multiple crops per harvest

@@ -50,7 +50,6 @@ export default function App () {
         return {...plant, seed_price: buyPrices[index+1]};
       }); // adds buy prices to seeds
       setCropData(combinedData); // set the crop data to data
-      console.log(combinedData);
     })
     .catch (error => {
       console.log("Error: " + error); // catch and log any errors
@@ -83,7 +82,7 @@ export default function App () {
 
   const seasonRef = ["spring", "summer", "fall", "winter"];
   console.log(wholeYearCalendar[seasonRef.indexOf(userOptions.season)]);
-  console.log(userOptions);
+  console.log(cropData);
   return (
     <>
       <InputSection currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar} userOptions={userOptions} setUserOptions={setUserOptions}/>

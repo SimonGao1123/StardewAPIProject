@@ -26,9 +26,45 @@ export default function OutputSection ({cropData, sprinklerData, fertilizerData,
             <div id="unwatered-section">
                 <CropsUnwatered userOptions={userOptions} totalCrops={totalCrops}/>
             </div>
+            <div id="total-time-processing">
+                <TotalProcessingTime userOptions={userOptions} currCalendar={currCalendar}/>
+            </div>
         </>
     );
 }
+function TotalProcessingTime ({userOptions, currCalendar}) {
+    const {kegs, preservesJars} = userOptions; // available preserves
+
+    const kegProcesses = currCalendar.reduce((acc, curr) => {
+        return acc + curr.harvest_crops.reduce((acc2, currCrop) => {
+            if (currCrop.prepType === "keg") return acc2+currCrop.numberPlanted;
+            return acc2;
+        }, 0);
+    }, 0);
+
+    const preservesProcesses = currCalendar.reduce((acc, curr) => {
+        return acc + curr.harvest_crops.reduce((acc2, currCrop) => {
+            if (currCrop.prepType === "preserves") return acc2+currCrop.numberPlanted;
+            return acc2;
+        }, 0);
+    }, 0);
+
+    if ((kegProcesses >  0 && !kegs) || (preservesProcesses > 0 && !preservesJars)) {
+        return (
+        <>
+            <label htmlFor="total-processing-time-output">Total Processing Time: </label>
+            <input id="processing-time-output" value="Missing Kegs/Jars" readOnly />
+        </>
+        );
+    }
+    
+    const preservesTime = Math.ceil(preservesProcesses/preservesJars) * 2;
+    return (
+        <>
+            <label htmlFor="total-processing-time-output">Total Processing Time: </label>
+            <input id="processing-time-output" value={preservesJars === 0 ? 0 : preservesTime} readOnly />
+        </>
+    );}
 function CropsUnwatered ({userOptions, totalCrops}) {
     const {normal, quality, iridium} = userOptions.sprinklers;
     const unwateredCrops = totalCrops-(normal*4 + quality*8 + iridium*24);

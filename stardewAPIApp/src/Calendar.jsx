@@ -20,7 +20,6 @@ export default function Calendar ({currCalendar, wholeCalendar, setWholeCalendar
             return copy;
         });
     }
-    console.log(cropEdit);
     return (
     <>
         {dayNumberSelected ? <AddCropPopUp seasonIndex = {seasonIndex} cropEdit={cropEdit} setCropEdit={setCropEdit} setDaySelected={setDaySelected} dayNumber={dayNumberSelected} season={userOptions.season} cropData={cropData} calendarSquares={currCalendar} setCalendarSquares={setCalendarSquares} fertilizerData={fertilizerData} userOptions={userOptions}/> 
@@ -73,12 +72,26 @@ function CalendarSquare ({setDaySelected, dayNumberSelected, dayNumber, calendar
     );
 }
 
+function possibleSellMethods (crop) {
+    // determines possible methods of selling (either keg/preserve) and also determines what it will be (Wine/Juice or Pickel/Jam)
+    if (crop.cropType === "flower") return []; // no possible 
+    const kegOnly = ["hops", "coffee_bean"];
+    if (kegOnly.includes(crop.name)) {
+        return <option key={"keg"} value={"keg"}>Keg</option>;
+    }
+    return <><option key={"keg"} value={"keg"}>Keg</option><option key={"preserves"} value={"preserves"}>Preserves</option></>;
+}
+
+
 // popup display
 function AddCropPopUp ({seasonIndex, cropEdit, setCropEdit, setDaySelected, dayNumber, season, cropData, calendarSquares, setCalendarSquares, fertilizerData, userOptions}) {
     const [cropSelected, setCropSelected] = useState(0); // CROP ID, makes searching cropData much faster
     const [numberOfCrops, setNumCrops] = useState(1);
     const [fertSelected, setFertSelected] = useState(0); // FERTILIZER ID, auto chooses no fertilizer (if select value == 0 then none was chosen)
+    const [prepMethod, setPrepMethod] = useState("normal"); // "normal"/"keg"/"preserves"
 
+    console.log(cropSelected + " " + prepMethod);
+    
     useEffect (() => {
         if (cropEdit) {  // add cropEditData if it exists
             setCropSelected(cropEdit.crop.id);
@@ -112,8 +125,16 @@ function AddCropPopUp ({seasonIndex, cropEdit, setCropEdit, setDaySelected, dayN
                     {fertilizerOptions}
                 </select>
 
+                <select id="sell-type-select" value={prepMethod} onChange={(e) => setPrepMethod(e.target.value)}>
+                    <option key={"normal"} value={"normal"}>Normal</option>
+                    {cropSelected ? possibleSellMethods(cropData.find(crop=>{return crop.id===cropSelected})) : <></>}
+                </select>
+
+                
                 <button id="add-crop-btn" onClick ={() => {
+                setPrepMethod("normal"); // reset prep method
                 // if editing, remove the old crop first
+
                 if (cropEdit) {
                     deletePlant(cropEdit.plant_harvest_id, setCalendarSquares, calendarSquares, setCropEdit);
                     setCropEdit(null);
@@ -125,7 +146,7 @@ function AddCropPopUp ({seasonIndex, cropEdit, setCropEdit, setDaySelected, dayN
                     cropData.find(c => c.id === cropSelected),
                     numberOfCrops,
                     fertSelected ? fertilizerData.find(f => f.id === fertSelected) : null,
-                    null,
+                    prepMethod,
                     calendarSquares,
                     setCalendarSquares,
                     userOptions,
@@ -152,6 +173,8 @@ function AddCropPopUp ({seasonIndex, cropEdit, setCropEdit, setDaySelected, dayN
                             <th>Total Cost</th>
                             <th>Time to Grow</th>
                             <th># of harvests</th> 
+                            <th>Processing Method</th>
+                            <th>Processing Time</th>
                             <th></th>
                             <th></th>
                         </tr>
@@ -169,8 +192,10 @@ function AddCropPopUp ({seasonIndex, cropEdit, setCropEdit, setDaySelected, dayN
                                 <th># Yield</th>
                                 <th>$ Earned</th>
                                 <th>$ Profit</th>
+                                <th>Fertilizer</th>
                                 <th>Time to Regrow</th>
-                                
+                                <th>Processing Method</th>
+                                <th>Processing Time</th>
                             </tr>
                         </thead>
 
@@ -204,7 +229,6 @@ function DisplayPlantedCrops (setCropSelected, setNumCrops, setFertSelected, cro
         if (userOptions.agricProf) {
             newDaysToGrow = Math.floor(newDaysToGrow*0.9);
         }
-        console.log("Agriculture?: " + userOptions.agricProf);
         let harvests = calculateRegrowthDays(cropData, dayNumber);
         
         displayRows.push(
@@ -215,6 +239,8 @@ function DisplayPlantedCrops (setCropSelected, setNumCrops, setFertSelected, cro
                 <td>{totalPrice}</td>
                 <td>{newDaysToGrow}</td>
                 <td>{harvests}</td>
+                <td>{nameNormalizer(cropData.prepType)}</td>
+                <td>{cropData.processingTime ? `${cropData.processingTime} Days` : "None"}</td>
                 <td><button onClick={() => {
                     deletePlant(cropData.plant_harvest_id, setCalendarSquares, calendarSquares, setCropEdit)
                     // reset local state if needed
@@ -274,11 +300,14 @@ function DisplayHarvestedCrops (calendarSquares, dayNumber, userOptions) {
     for (const cropData of dayData) {
         displayRows.push(
             <tr key={`harvested-${dayNumber}-${cropData.id}-0`}>
-                <td>{nameNormalizer(cropData.crop.name)}</td>
+                <td>{nameNormalizer(cropData.cropType)}</td>
                 <td>{cropData.numberPlanted}</td>
-                <td>${cropData.total_earned}</td>
-                <td>${cropData.profit}</td>
+                <td>{cropData.total_earned}</td>
+                <td>{cropData.profit}</td>
+                <td>{cropData.fertilizer ? nameNormalizer(cropData.fertilizer.name) : "None"}</td>
                 <td>{cropData.crop.regrowth?cropData.crop.regrowth:"N/A"}</td>
+                <td>{nameNormalizer(cropData.prepType)}</td>
+                <td>{cropData.processingTime ? `${cropData.processingTime} Days` : "None"}</td>
             </tr>
         );
     }
@@ -299,26 +328,67 @@ function priceCalculate (cropPrice, numberPlanted, farmingLevel, fertilizer, til
     return price;
 }
 let plantPairID = 0; // for delete function, to be able to delete planted/harvest groups quickly
+
+// Returns new object containing information about the price and what type of artisan good it will become
+function calculatePrepTypeSellVal (crop, prepType, userOptions) {
+    const {name, sellPrices:{default:price}, cropType} = crop;
+    const {artisanProf} = userOptions; // +40% to artisan goods
+    const mul = artisanProf ? 1.4 : 1;
+    if (prepType === "normal") {
+        return {sellPrice: price, name: name, time: 0};
+    }
+    
+    // Special crops
+    if (prepType==="keg" && name==="wheat") {
+        return {sellPrice: 200, name: "beer", time: 2};
+    }
+    if (prepType==="keg" && name==="hops") {
+        return {sellPrice: 300, name: "pale_ale", time: 2};
+    }
+    if (prepType==="keg" && name==="coffee_bean") {
+        return {sellPrice: 150, name: "coffee", time: 0};
+    }
+
+    if (prepType==="keg" && cropType==="fruit") {
+        // wine
+        return {sellPrice: price*3*mul, name: `${name}_wine`, time: 6};
+    }
+    if (prepType==="keg" && cropType==="vegetable") {
+        return {sellPrice: price*2.25*mul, name: `${name}_juice`, time: 4}; 
+    }
+    if (prepType==="preserves") {
+        return {sellPrice: (2*price+50)*mul, name: `${name}_${cropType==="fruit" ? "jelly" : "pickel"}`, time: 2}; 
+    }
+
+}
+
 const updateCalendarData = (dayNumber, crop, numberOfCrops, fertilizerType, prepType, calendarSquares, setCalendarSquares, userOptions, seasonIndex) => {
     // WILL ADD PREP TIME LATER
+    const BaseSell = calculatePrepTypeSellVal(crop, prepType, userOptions);
     const newPlantAdd = {
         crop: crop,
         dayPlanted: dayNumber,
         numberPlanted: numberOfCrops,
         fertilizer: fertilizerType,
         id: `${seasonIndex}-plant-${dayNumber}-${calendarSquares[dayNumber-1].planted_crops.length}-${plantPairID}`,
-        plant_harvest_id: plantPairID
+        plant_harvest_id: plantPairID,
+        prepType: prepType,
+        processingTime: BaseSell.time
     }; // data for new plant added (planting)
     const {farmingLevel, tillerProf} = userOptions;
-    const sellValue = Math.floor(priceCalculate(crop.sellPrices.default, numberOfCrops, farmingLevel, fertilizerType, tillerProf));
+    const sellValue = Math.floor(priceCalculate(BaseSell.sellPrice, numberOfCrops, farmingLevel, fertilizerType, tillerProf));
     const newHarvestAdd = {
         crop: crop,
         numberPlanted: numberOfCrops,
         dayPlanted: dayNumber,
+        fertilizer: fertilizerType,
         total_earned: sellValue,
         profit: sellValue-crop.seed_price*numberOfCrops,
         id: `${seasonIndex}-harvest-${dayNumber}-${calendarSquares[dayNumber-1].planted_crops.length}-${plantPairID}`,
-        plant_harvest_id: plantPairID
+        plant_harvest_id: plantPairID,
+        prepType: prepType,
+        cropType: BaseSell.name,
+        processingTime: BaseSell.time
     }; // to be displayed in popup
     plantPairID++; 
     // keep making new plant-harvest id's for quick access
