@@ -89,8 +89,6 @@ function AddCropPopUp ({seasonIndex, cropEdit, setCropEdit, setDaySelected, dayN
     const [numberOfCrops, setNumCrops] = useState(1);
     const [fertSelected, setFertSelected] = useState(0); // FERTILIZER ID, auto chooses no fertilizer (if select value == 0 then none was chosen)
     const [prepMethod, setPrepMethod] = useState("normal"); // "normal"/"keg"/"preserves"
-
-    console.log(cropSelected + " " + prepMethod);
     
     useEffect (() => {
         if (cropEdit) {  // add cropEditData if it exists
@@ -376,7 +374,7 @@ const updateCalendarData = (dayNumber, crop, numberOfCrops, fertilizerType, prep
         processingTime: BaseSell.time
     }; // data for new plant added (planting)
     const {farmingLevel, tillerProf} = userOptions;
-    const sellValue = Math.floor(priceCalculate(BaseSell.sellPrice, numberOfCrops, farmingLevel, fertilizerType, tillerProf));
+    const sellValue = prepType !== "normal" ? BaseSell.sellPrice * numberOfCrops : Math.floor(priceCalculate(BaseSell.sellPrice, numberOfCrops, farmingLevel, fertilizerType, tillerProf));
     const newHarvestAdd = {
         crop: crop,
         numberPlanted: numberOfCrops,
