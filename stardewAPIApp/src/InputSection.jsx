@@ -65,11 +65,10 @@ function FarmingLevelSelect ({userOptions, setUserOptions}) {
 // - need to update materials list for output object
 // TEMPORARY: THE AUTOFILL BUTTON JUST SETS 100 TO SELECTED  QUALITY (needs to take total # of crops and divide by respective sprinkler water yield)
 function SprinklerSelect ({currCalendar, userOptions, setUserOptions}) {
-    function calculateTotalCrops (currCalendar) {
+    function calculateTotalCrops(currCalendar) {
+        if (!currCalendar || !Array.isArray(currCalendar)) return 0;
         return currCalendar.reduce((acc, currSquare) => {
-            return acc + currSquare.planted_crops.reduce((crops, crop) =>{
-                return crops + crop.numberPlanted;
-            }, 0);
+            return acc + (currSquare.planted_crops?.reduce((crops, crop) => crops + (crop.numberPlanted || 0), 0) || 0);
         }, 0);
     }
     const totalCrops = calculateTotalCrops(currCalendar);
