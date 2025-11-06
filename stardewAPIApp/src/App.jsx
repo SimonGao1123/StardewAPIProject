@@ -29,6 +29,12 @@ const defaultCalendarSquare = {
   harvest_crops: [],
 }; 
 
+function makeCalendarArray () {
+  return Array.from({ length: 28 }, (_, index) => ({
+    ...defaultCalendarSquare,
+    id: index
+  }));
+}
 
 const calendarArray = Array.from({length: 28}, (_, index)=>({...defaultCalendarSquare, id: index})); // holds all 28 squares for a season
 export default function App () {
@@ -72,7 +78,7 @@ export default function App () {
   // CALENDAR USESTATE for all seasons
   const [wholeYearCalendar, setWholeCalendar] = useState(() => {
     const savedCalendar = localStorage.getItem("calendar_year");
-    return savedCalendar ? JSON.parse(savedCalendar) : Array.from({length: 4}, (_, index) => ([...calendarArray]));
+    return savedCalendar ? JSON.parse(savedCalendar) : Array.from({length: 4}, () => (makeCalendarArray()));
   }); // holds all the squares (28 in total) for the days in the month (each square is an object with data)
   
   
@@ -81,8 +87,7 @@ export default function App () {
   }, [wholeYearCalendar]); // add to localstorage if calendar has changed  
 
   const seasonRef = ["spring", "summer", "fall", "winter"];
-  console.log(wholeYearCalendar[seasonRef.indexOf(userOptions.season)]);
-  console.log(cropData);
+
   return (
     <>
       <InputSection currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar} userOptions={userOptions} setUserOptions={setUserOptions}/>

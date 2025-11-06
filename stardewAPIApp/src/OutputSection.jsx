@@ -53,7 +53,7 @@ function TotalProcessingTime ({userOptions, currCalendar}) {
                         KegTwoDay+=crop.numberPlanted;
                         break;
                     default:
-                        console.log("ERROR, INVALID TIME FOUND");
+                        if (crop.crop.id !== 4) console.log("ERROR, INVALID TIME FOUND");
                 }
             }
         }
@@ -97,10 +97,8 @@ function TotalProcessingTime ({userOptions, currCalendar}) {
         );
     }
 
-    console.log(KegTwoDay + KegFourDay + KegSixDay);    
     const preservesTime = preservesJars ? Math.ceil(preservesProcesses/preservesJars) * 2 : 0;
     const kegTime = kegs ? calculateKegProcessingTime(KegTwoDay, KegFourDay, KegSixDay, kegs) : 0;
-    console.log(kegTime);
     return (
         <>
             <label htmlFor="total-processing-time-output">Total Processing Time: </label>
