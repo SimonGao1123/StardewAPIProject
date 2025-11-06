@@ -91,7 +91,7 @@ export default function App () {
   return (
     <>
       <InputSection currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar} userOptions={userOptions} setUserOptions={setUserOptions}/>
-      <Calendar currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar} setWholeCalendar={setWholeCalendar} userOptions={userOptions} cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData} seasonIndex={seasonRef.indexOf(userOptions.season)}/>
+      <Calendar currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar} setWholeCalendar={setWholeCalendar} userOptions={userOptions} cropData={cropData} fertilizerData={fertilizerData} seasonIndex={seasonRef.indexOf(userOptions.season)}/>
       <OutputSection cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData} userOptions={userOptions} currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar}/>
       <button onClick={()=>{
         localStorage.clear();
