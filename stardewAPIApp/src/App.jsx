@@ -18,19 +18,20 @@ const defaultOptions = {
     },
     tillerProf: false,
     artisanProf: false,
+    agricProf: false,
     kegs: 0,
     preservesJars: 0
 };
 
-// =========TODO=========
-const defaultCalendarSquare = {
-  planted_crops: [],
-  harvest_crops: [],
 
-}; 
+function makeCalendarArray () {
+  return Array.from({ length: 28 }, (_, index) => ({
+    planted_crops:[],
+    harvest_crops:[],
+    id: index
+  }));
+}
 
-
-const calendarArray = Array.from({length: 28}, (_, index)=>({...defaultCalendarSquare, id: index})); // holds all 28 squares for a season
 export default function App () {
   // test fetching the entire API works for: https://stardewapi.co/api/crops
   const [cropData, setCropData] = useState([]);
@@ -49,6 +50,7 @@ export default function App () {
       const combinedData = data.map((plant, index) => {
         return {...plant, seed_price: buyPrices[index+1]};
       }); // adds buy prices to seeds
+      combinedData.pop(); // remove cactus fruit
       setCropData(combinedData); // set the crop data to data
       console.log(combinedData);
     })
@@ -70,26 +72,24 @@ export default function App () {
     // it will only run the code in its body if the items in the array given as 2nd parameter had CHANGED from the LAST RENDER 
   
   
-  // CALENDAR USESTATE
-  const [calendarSquares, setCalendarSquares] = useState(() => {
-    const savedCalendar = localStorage.getItem("calendar_squares");
-    return savedCalendar ? JSON.parse(savedCalendar) : calendarArray;
+  // CALENDAR USESTATE for all seasons
+  const [wholeYearCalendar, setWholeCalendar] = useState(() => {
+    const savedCalendar = localStorage.getItem("calendar_year");
+    return savedCalendar ? JSON.parse(savedCalendar) : Array.from({length: 4}, () => (makeCalendarArray()));
   }); // holds all the squares (28 in total) for the days in the month (each square is an object with data)
   
+  
   useEffect(() => {
-    localStorage.setItem("calendar_squares", JSON.stringify(calendarSquares));
-  }, [calendarSquares]); // add to localstorage if calendar has changed
-  
-  const [currentOutputData, setOutputData] = useState({}); // holds all relevent output data to be displayed in output section (altered throughout calendar section)
-  
+    localStorage.setItem("calendar_year", JSON.stringify(wholeYearCalendar));
+  }, [wholeYearCalendar]); // add to localstorage if calendar has changed  
 
-  console.log(calendarSquares); // TESTING CALENDAR SECTION
-  console.log(userOptions);
+  const seasonRef = ["spring", "summer", "fall", "winter"];
+
   return (
     <>
-      <InputSection userOptions={userOptions} setUserOptions={setUserOptions}/>
-      <Calendar calendarSquares={calendarSquares} setCalendarSquares={setCalendarSquares} userOptions={userOptions} setUserOptions={setUserOptions} cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData}/>
-      <OutputSection/>
+      <InputSection currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar} userOptions={userOptions} setUserOptions={setUserOptions}/>
+      <Calendar currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar} setWholeCalendar={setWholeCalendar} userOptions={userOptions} cropData={cropData} fertilizerData={fertilizerData} seasonIndex={seasonRef.indexOf(userOptions.season)}/>
+      <OutputSection cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData} userOptions={userOptions} currCalendar={wholeYearCalendar} seasonIndex={seasonRef.indexOf(userOptions.season)}/>
       <button onClick={()=>{
         localStorage.clear();
         window.location.reload(); // clears local storage and reloads window

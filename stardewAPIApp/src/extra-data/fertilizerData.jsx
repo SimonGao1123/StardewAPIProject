@@ -17,7 +17,7 @@ const fertilizerData = [
     name: "deluxe_fertilizer",
     multiplier: 1.184
   },
-
+ // NOTE: MULTIPLIERS ARE A ROUGH ESTIMATE OF PRICE INCREASE
   {
     id:4,
     type: "speed_grow",

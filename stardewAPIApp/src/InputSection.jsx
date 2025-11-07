@@ -1,27 +1,27 @@
 import './App.css';
-import { use, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 
-export default function InputSection ({userOptions, setUserOptions}) {
+export default function InputSection ({currCalendar, wholeCalendar, userOptions, setUserOptions}) {
     // input section for all default options (how to calculate)
     return (
         <>
-            <div class="input-section-container" id="seasonSelection">
+            <div className="input-section-container" id="seasonSelection">
                 <SeasonSelection userOptions={userOptions} setUserOptions={setUserOptions}/>
             </div>
 
-            <div class="input-section-container" id="farmingLevelSelection">
+            <div className="input-section-container" id="farmingLevelSelection">
                 <FarmingLevelSelect userOptions={userOptions} setUserOptions={setUserOptions}/>
             </div>
 
-            <div class="input-section-container" id="sprinklerSelection">
-                <SprinklerSelect userOptions={userOptions} setUserOptions={setUserOptions}/>
+            <div className="input-section-container" id="sprinklerSelection">
+                <SprinklerSelect currCalendar={currCalendar} userOptions={userOptions} setUserOptions={setUserOptions}/>
             </div>
 
-            <div class="input-section-container" id="professionSelection">
+            <div className="input-section-container" id="professionSelection">
                 <ProfessionSelection userOptions={userOptions} setUserOptions={setUserOptions}/>
             </div>
 
-            <div class="input-section-container" id="kegspreservesSelection">
+            <div className="input-section-container" id="kegspreservesSelection">
                 <KegsAndPreservesSelection userOptions={userOptions} setUserOptions={setUserOptions}/>
             </div>
         </>
@@ -64,10 +64,14 @@ function FarmingLevelSelect ({userOptions, setUserOptions}) {
 // - cannot do without access to calendar input information (FIRST DO CALENDAR)
 // - need to update materials list for output object
 // TEMPORARY: THE AUTOFILL BUTTON JUST SETS 100 TO SELECTED  QUALITY (needs to take total # of crops and divide by respective sprinkler water yield)
-function SprinklerSelect ({userOptions, setUserOptions}) {
-    const normalSprinklerYield = 4; // waters 4 plants PER sprinklers
-    const qualitySprinklerYield = 8; // waters 8 plants PER sprinklers
-    const iridiumSprinklerYield = 24; // waters 24 plants PER sprinklers
+function SprinklerSelect ({currCalendar, userOptions, setUserOptions}) {
+    function calculateTotalCrops(currCalendar) {
+        if (!currCalendar || !Array.isArray(currCalendar)) return 0;
+        return currCalendar.reduce((acc, currSquare) => {
+            return acc + (currSquare.planted_crops?.reduce((crops, crop) => crops + (crop.numberPlanted || 0), 0) || 0);
+        }, 0);
+    }
+    const totalCrops = calculateTotalCrops(currCalendar);
 
     return (
     <>
@@ -90,20 +94,17 @@ function SprinklerSelect ({userOptions, setUserOptions}) {
         <p>AutoFill Sprinkler Count?</p>
         <button value="normal" 
         onClick={()=>{
-            const newSprinklerCount = 100; // TEMPORARY (BUTTON SHOULD JUST TAKE # CROPS/SPRINKLER YIELD)
-            setUserOptions({...userOptions, sprinklers: {normal: newSprinklerCount, quality: 0, iridium: 0}})}
+            setUserOptions({...userOptions, sprinklers: {normal: Math.ceil(totalCrops/4), quality: 0, iridium: 0}})}
         }>
         Normal Sprinklers</button>
         <button value="quality"
         onClick={()=>{
-            const newSprinklerCount = 100; // TEMPORARY (BUTTON SHOULD JUST TAKE # CROPS/SPRINKLER YIELD)
-            setUserOptions({...userOptions, sprinklers: {normal: 0, quality: newSprinklerCount, iridium: 0}})}
+            setUserOptions({...userOptions, sprinklers: {normal: 0, quality: Math.ceil(totalCrops/8), iridium: 0}})}
         }>
         Quality Sprinklers</button>
         <button value="iridium"
         onClick={()=>{
-            const newSprinklerCount = 100; // TEMPORARY (BUTTON SHOULD JUST TAKE # CROPS/SPRINKLER YIELD)
-            setUserOptions({...userOptions, sprinklers: {normal: 0, quality: 0, iridium: newSprinklerCount}})} // sets all others to 0
+            setUserOptions({...userOptions, sprinklers: {normal: 0, quality: 0, iridium: Math.ceil(totalCrops/24)}})} // sets all others to 0
         }>
         Iridium Sprinklers</button>
     </>
@@ -112,19 +113,48 @@ function SprinklerSelect ({userOptions, setUserOptions}) {
 
 // selection if user has tiller and/or artisan profession (saves into userOption object)
 function ProfessionSelection ({userOptions, setUserOptions}) {
-    return (
-        <>
-            <label htmlFor="tiller-profession">Tiller Profession (+10% Sell Value for Crops)</label>
+    if (userOptions.farmingLevel < 5 && userOptions.tillerProf) {
+        setUserOptions({...userOptions, tillerProf: false});
+    }
+    if (userOptions.farmingLevel < 10 && (userOptions.agricProf || userOptions.artisanProf)) {
+        setUserOptions({...userOptions, agricProf: false, artisanProf: false});
+    }
+    const tillerProfession = (<><label htmlFor="tiller-profession">Tiller Profession (+10% Sell Value for Crops)</label>
             <input id="tiller-profession" type="checkbox" checked={userOptions.tillerProf}
             onChange={(e) => {
                 setUserOptions({...userOptions, tillerProf: e.target.checked});
+            }}/></>);
+        
+    const artisanOrAgriculture = (<><label htmlFor="artisan-profession">Artisan Profession (+40% Sell Value for Wine/Jam/Pickels)</label>
+            <input id="artisan-profession" type="radio" name="artisan-or-agriculture" 
+            onChange={(e) => {
+                if (e.target.checked) {
+                    setUserOptions({...userOptions, agricProf: false, artisanProf: true});
+                }
             }}/>
 
-            <label htmlFor="artisan-profession">Artisan Profession (+40% Sell Value for Wine/Jam/Pickels)</label>
-            <input id="artisan-profession" type="checkbox" checked={userOptions.artisanProf}
+            <label htmlFor="agriculture-profession">Agrilcurist Profession (-10% growth time)</label>
+            <input id="agriculture-profession" type="radio" name="artisan-or-agriculture" 
             onChange={(e) => {
-                setUserOptions({...userOptions, artisanProf: e.target.checked});
+                if (e.target.checked) {
+                    setUserOptions({...userOptions, agricProf: true, artisanProf: false});
+                }
             }}/>
+
+            <label htmlFor="none-profession">None</label>
+            <input id="none-profession" type="radio" name="artisan-or-agriculture" 
+            onChange={(e) => {
+                if (e.target.checked) {
+                    setUserOptions({...userOptions, agricProf: false, artisanProf: false});
+                }
+            }}/></>);
+
+    return (
+        <>
+            {userOptions.farmingLevel >= 5 ? tillerProfession : <></>}
+            {userOptions.farmingLevel === 10 ? artisanOrAgriculture : <></>}
+
+            
         </>
     );
        
