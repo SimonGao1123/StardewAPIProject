@@ -23,20 +23,15 @@ const defaultOptions = {
     preservesJars: 0
 };
 
-// =========TODO=========
-const defaultCalendarSquare = {
-  planted_crops: [],
-  harvest_crops: [],
-}; 
 
 function makeCalendarArray () {
   return Array.from({ length: 28 }, (_, index) => ({
-    ...defaultCalendarSquare,
+    planted_crops:[],
+    harvest_crops:[],
     id: index
   }));
 }
 
-const calendarArray = Array.from({length: 28}, (_, index)=>({...defaultCalendarSquare, id: index})); // holds all 28 squares for a season
 export default function App () {
   // test fetching the entire API works for: https://stardewapi.co/api/crops
   const [cropData, setCropData] = useState([]);
@@ -55,7 +50,9 @@ export default function App () {
       const combinedData = data.map((plant, index) => {
         return {...plant, seed_price: buyPrices[index+1]};
       }); // adds buy prices to seeds
+      combinedData.pop(); // remove cactus fruit
       setCropData(combinedData); // set the crop data to data
+      console.log(combinedData);
     })
     .catch (error => {
       console.log("Error: " + error); // catch and log any errors
@@ -92,7 +89,7 @@ export default function App () {
     <>
       <InputSection currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar} userOptions={userOptions} setUserOptions={setUserOptions}/>
       <Calendar currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar} setWholeCalendar={setWholeCalendar} userOptions={userOptions} cropData={cropData} fertilizerData={fertilizerData} seasonIndex={seasonRef.indexOf(userOptions.season)}/>
-      <OutputSection cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData} userOptions={userOptions} currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar}/>
+      <OutputSection cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData} userOptions={userOptions} currCalendar={wholeYearCalendar} seasonIndex={seasonRef.indexOf(userOptions.season)}/>
       <button onClick={()=>{
         localStorage.clear();
         window.location.reload(); // clears local storage and reloads window
