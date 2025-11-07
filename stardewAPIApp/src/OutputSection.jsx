@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 
-export default function OutputSection ({cropData, sprinklerData, fertilizerData, userOptions, currCalendar, wholeCalendar}) {
+export default function OutputSection ({cropData, sprinklerData, fertilizerData, userOptions, currCalendar, seasonIndex}) {
     const [totalSpent, setTotalSpent] = useState(0);
     const [totalEarned, setTotalEarned] = useState(0);
     const [totalCrops, setTotalCrops] = useState(0);
     return (
         <>
             <div id="total-crops-section">
-                <TotalCropsDisplay calendarSquares={currCalendar} setTotalCrops={setTotalCrops}/>
+                <TotalCropsDisplay wholeCalendar={currCalendar} calendarSquares={currCalendar[seasonIndex]} setTotalCrops={setTotalCrops} userOptions={userOptions}/>
             </div>
 
             <div id="profit-section">
@@ -16,24 +16,24 @@ export default function OutputSection ({cropData, sprinklerData, fertilizerData,
             </div>
 
             <div id="earned-section">
-                <TotalEarned calendarSquares={currCalendar} setTotalEarned={setTotalEarned}/>
+                <TotalEarned wholeCalendar={currCalendar} calendarSquares={currCalendar[seasonIndex]} setTotalEarned={setTotalEarned} userOptions={userOptions}/>
             </div>
 
             <div id="spent-section">
-                <TotalSpent calendarSquares={currCalendar} setTotalSpent={setTotalSpent}/>
+                <TotalSpent wholeCalendar={currCalendar} calendarSquares={currCalendar[seasonIndex]} setTotalSpent={setTotalSpent} userOptions={userOptions}/>
             </div>
 
             <div id="unwatered-section">
                 <CropsUnwatered userOptions={userOptions} totalCrops={totalCrops}/>
             </div>
             <div id="total-time-processing">
-                <TotalProcessingTime userOptions={userOptions} currCalendar={currCalendar}/>
+                <TotalProcessingTime wholeCalendar={currCalendar} userOptions={userOptions} currCalendar={currCalendar[seasonIndex]}/>
             </div>
             
         </>
     );
 }
-function TotalProcessingTime ({userOptions, currCalendar}) {
+function TotalProcessingTime ({wholeCalendar, userOptions, currCalendar}) {
     const {kegs, preservesJars} = userOptions; // available preserves
 
     let KegTwoDay = 0;
@@ -123,7 +123,7 @@ function CropsUnwatered ({userOptions, totalCrops}) {
         </>
     );
 }
-function TotalSpent ({calendarSquares, setTotalSpent}) {
+function TotalSpent ({wholeCalendar, calendarSquares, setTotalSpent, userOptions}) {
     const [localTotalSpent, setlocalTotalSpent] = useState(0);
 
     useEffect(() => {
@@ -133,9 +133,9 @@ function TotalSpent ({calendarSquares, setTotalSpent}) {
             }, 0);
         }, 0);
 
-        setlocalTotalSpent(total); // update this component's state
-        setTotalSpent(total);      // inform the parent component
-    }, [calendarSquares, setTotalSpent]);
+        setlocalTotalSpent(Math.round(total)); // update this component's state
+        setTotalSpent(Math.round(total));      // inform the parent component
+    }, [wholeCalendar, userOptions.season]);
 
     return (
         <>
@@ -145,7 +145,7 @@ function TotalSpent ({calendarSquares, setTotalSpent}) {
     );
 }
 
-function TotalEarned({ calendarSquares, setTotalEarned }) {
+function TotalEarned({wholeCalendar, calendarSquares, setTotalEarned, userOptions}) {
     const [localTotalEarned, setLocalTotalEarned] = useState(0);
 
     useEffect(() => {
@@ -155,9 +155,9 @@ function TotalEarned({ calendarSquares, setTotalEarned }) {
             }, 0);
         }, 0);
 
-        setLocalTotalEarned(total); // update this component's state
-        setTotalEarned(total);      // inform the parent component
-    }, [calendarSquares, setTotalEarned]);
+        setLocalTotalEarned(Math.round(total)); // update this component's state
+        setTotalEarned(Math.round(total));      // inform the parent component
+    }, [wholeCalendar, userOptions.season]);
 
     return (
         <>
@@ -166,15 +166,15 @@ function TotalEarned({ calendarSquares, setTotalEarned }) {
         </>
     );
 }
-function TotalCropsDisplay ({calendarSquares, setTotalCrops}) {
+function TotalCropsDisplay ({wholeCalendar, calendarSquares, setTotalCrops, userOptions}) {
     let totalCrops = calendarSquares.reduce((acc, currSquare) => {
         return acc + currSquare.planted_crops.reduce((crops, crop) =>{
             return crops + crop.numberPlanted;
         }, 0);
     }, 0);
     useEffect(() => {
-        setTotalCrops(totalCrops);
-    }, [totalCrops, setTotalCrops]);
+        setTotalCrops(Math.round(totalCrops));
+    }, [wholeCalendar, userOptions.season]);
     return (
         <>
             <label htmlFor="total-num-crops-output">Total Number of Crops: </label>

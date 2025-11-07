@@ -1,6 +1,6 @@
 import './App.css';
 import { useEffect, useState } from "react";
-export default function Calendar ({currCalendar, wholeCalendar, setWholeCalendar, userOptions, cropData, sprinklerData, fertilizerData, seasonIndex}) {
+export default function Calendar ({currCalendar, wholeCalendar, setWholeCalendar, userOptions, cropData, fertilizerData, seasonIndex}) {
     const [dayNumberSelected, setDaySelected] = useState(null); // for determining which day cropadd will target, if it is null then no day selected and popup should disappear
     const CalendarDisplay = [];
     const [cropEdit, setCropEdit] = useState(null); // holds the plantedHarvest id for crop that is being edited (exact id of crop edited)
@@ -84,6 +84,7 @@ function AddCropPopUp ({seasonIndex, cropEdit, setCropEdit, setDaySelected, dayN
             setNumCrops(cropEdit.numberPlanted);
             setFertSelected(cropEdit.fertilizer?.id);    
         }
+
     }, [cropEdit]);
     console.log(cropEdit);
 
@@ -119,35 +120,34 @@ function AddCropPopUp ({seasonIndex, cropEdit, setCropEdit, setDaySelected, dayN
 
                 
                 <button id="add-crop-btn" onClick ={() => {
-                setPrepMethod("normal"); // reset prep method
-                // if editing, remove the old crop first
+                // reset prep UI immediately
+                setPrepMethod("normal");
 
-                if (cropEdit) {
-                    deletePlant(cropEdit.plant_harvest_id, setCalendarSquares, setCropEdit);
-                    console.log("delete conditions made");
-                    console.log(cropEdit.plant_harvest_id);
+                
+                    // shallow-copy seasons/days and inner arrays so we mutate safely
+                addAndEditFunctions(dayNumber, 
+                    cropData.find(c => c.id===cropSelected), 
+                    numberOfCrops, 
+                    fertilizerData.find(f => f.id === fertSelected), 
+                    prepMethod, 
+                    calendarSquares, 
+                    userOptions, 
+                    seasonIndex, 
+                    cropEdit,
+                    setCalendarSquares);
                     
-                }
+                 
 
-                // then add the new one
-                updateCalendarData(
-                    dayNumber,
-                    cropData.find(c => c.id === cropSelected),
-                    numberOfCrops,
-                    fertSelected ? fertilizerData.find(f => f.id === fertSelected) : null,
-                    prepMethod,
-                    calendarSquares,
-                    setCalendarSquares,
-                    userOptions,
-                    seasonIndex
-                );
+                // reset UI state after update
+                setCropEdit(null);
                 setCropSelected(0);
                 setNumCrops(1);
                 setFertSelected(0);
-                }}
-                
-                >
+                setDaySelected(null);
+                }}>
+                    
                 {cropEdit ? "Save Edit" : "Add Crop"}
+                
                 </button>
             </div>
 
@@ -202,6 +202,106 @@ function AddCropPopUp ({seasonIndex, cropEdit, setCropEdit, setDaySelected, dayN
     );
 }
 
+// Returns a new version of the calendarsquares given (applies edit AND delete crop on same version of newSquares)
+function addAndEditFunctions (dayNumber, crop, numberOfCrops, fertilizerType, prepType, calendarSquares, userOptions, seasonIndex, cropEdit, setCalendarSquares) {
+    let newSquares = [...calendarSquares];
+
+    if (cropEdit) { // delete crop selected first if editing
+        newSquares=newSquares.map((season) => {
+            return season.map(square => {
+                const newPlanted = square.planted_crops.filter((crop) => crop.plant_harvest_id !== cropEdit.plant_harvest_id);
+                const newHarvest = square.harvest_crops.filter((crop) => crop.plant_harvest_id !== cropEdit.plant_harvest_id);
+
+                return {...square, planted_crops: newPlanted, harvest_crops: newHarvest};
+            });
+        })
+    }
+
+    const BaseSell = calculatePrepTypeSellVal(crop, prepType, userOptions);
+    const newPlantAdd = {
+        crop: crop,
+        dayPlanted: dayNumber,
+        numberPlanted: numberOfCrops,
+        fertilizer: fertilizerType,
+        id: `${seasonIndex}-plant-${dayNumber}-${calendarSquares[seasonIndex][dayNumber-1].planted_crops.length}-${plantPairID}`,
+        plant_harvest_id: plantPairID,
+        prepType: prepType,
+        processingTime: BaseSell.time
+    }; // data for new plant added (planting)
+    const {farmingLevel, tillerProf} = userOptions;
+    const sellValue = prepType !== "normal" ? BaseSell.sellPrice * numberOfCrops : Math.floor(priceCalculate(BaseSell.sellPrice, numberOfCrops, farmingLevel, fertilizerType, tillerProf));
+    const newHarvestAdd = {
+        crop: crop,
+        numberPlanted: numberOfCrops,
+        dayPlanted: dayNumber,
+        fertilizer: fertilizerType,
+        total_earned: sellValue,
+        profit: sellValue-crop.seed_price*numberOfCrops,
+        id: `${seasonIndex}-harvest-${dayNumber}-${calendarSquares[seasonIndex][dayNumber-1].planted_crops.length}-${plantPairID}`,
+        plant_harvest_id: plantPairID,
+        prepType: prepType,
+        cropType: BaseSell.name,
+        processingTime: BaseSell.time
+    }; // to be displayed in popup
+    plantPairID++; 
+
+    // Add crop section
+    const seasons = ["spring", "summer", "fall", "winter"];
+    let currSeasonIndex = seasonIndex;
+    // INSTEAD OF CREATING NEW SQUARES HERE USE PAST USESQUARES WHERE THE CROP WAS DELETED
+    const newPlantSquare = {...newSquares[currSeasonIndex][dayNumber-1]}; // first day to plant
+    newPlantSquare.planted_crops = [...newPlantSquare.planted_crops, newPlantAdd];
+    newSquares[currSeasonIndex][dayNumber-1] = newPlantSquare;
+
+    const {daysToGrow, regrowth} = newPlantAdd.crop;
+    const {season} = crop; // all seasons crop can grow in
+    
+    const availableSeasons = season.slice(season.indexOf(seasons[seasonIndex]));
+    
+    let daysToFirstGrow = daysToGrow;
+    if (fertilizerType && fertilizerType.type === "speed_grow") {
+        daysToFirstGrow = Math.floor(daysToFirstGrow*fertilizerType.multiplier);
+    }
+
+    if (userOptions.agricProf) {
+        daysToFirstGrow = Math.floor(daysToFirstGrow*0.9);
+    }
+
+    let dayCounter = daysToFirstGrow + dayNumber - 1;
+
+    if (dayCounter > 27 && availableSeasons.length < 2) {
+        setCalendarSquares(newSquares);
+        return;
+    }
+
+    if (dayCounter > 27) {
+        currSeasonIndex++;
+        availableSeasons.shift(); // shift focus on next season
+    }
+
+    dayCounter = dayCounter % 28; // ensure not out of bounds
+
+    const newHarvestSquare = {...newSquares[currSeasonIndex][dayCounter]};
+    newHarvestSquare.harvest_crops = [...newHarvestSquare.harvest_crops, newHarvestAdd];
+    newSquares[currSeasonIndex][dayCounter] = newHarvestSquare;
+
+    if (regrowth) {
+        dayCounter += regrowth;
+        while (dayCounter <= 27) {
+            const regrowthSquare = {...newSquares[currSeasonIndex][dayCounter]};
+            regrowthSquare.harvest_crops = [...regrowthSquare.harvest_crops, newHarvestAdd];
+            newSquares[currSeasonIndex][dayCounter] = regrowthSquare;
+            dayCounter += regrowth;
+            if (dayCounter > 27 && availableSeasons.length > 1) {
+                // available season to go into
+                currSeasonIndex++;
+                dayCounter = dayCounter % 28;
+                availableSeasons.shift();
+            }
+        }
+    }
+    setCalendarSquares(newSquares);
+}
 // to be added within the table
 function DisplayPlantedCrops (setCalendarSquares, setCropSelected, setNumCrops, setFertSelected, cropEdit, setCropEdit, calendarSquares, seasonIndex, dayNumber, userOptions) {
     const displayRows = [];
@@ -225,7 +325,7 @@ function DisplayPlantedCrops (setCalendarSquares, setCropSelected, setNumCrops, 
                 <td>{nameNormalizer(cropData.crop.name)}</td>
                 <td>{cropData.numberPlanted}</td>
                 <td>{cropData.fertilizer?nameNormalizer(cropData.fertilizer.name):"None"}</td>
-                <td>{totalPrice}</td>
+                <td>{Math.round(totalPrice)}</td>
                 <td>{newDaysToGrow}</td>
                 <td>{harvests}</td>
                 <td>{nameNormalizer(cropData.prepType)}</td>
@@ -280,12 +380,6 @@ function deletePlant(plantHarvestId, setCalendarSquares, setCropEdit) {
                 const newPlanted = square.planted_crops.filter(plant => plant.plant_harvest_id !== plantHarvestId);
                 const newHarvested = square.harvest_crops.filter(plant => plant.plant_harvest_id !== plantHarvestId);
             // If nothing changed, return same square reference to avoid over-rendering
-                if (
-                    newPlanted.length === square.planted_crops.length &&
-                    newHarvested.length === square.harvest_crops.length
-                ) {
-                return square;
-                }
 
                 return {...square, planted_crops:newPlanted, harvest_crops:newHarvested};
             })
@@ -303,8 +397,8 @@ function DisplayHarvestedCrops (calendarSquares, dayNumber, userOptions) {
             <tr key={`harvested-${dayNumber}-${cropData.id}-0`}>
                 <td>{nameNormalizer(cropData.cropType)}</td>
                 <td>{cropData.numberPlanted}</td>
-                <td>{cropData.total_earned}</td>
-                <td>{cropData.profit}</td>
+                <td>{Math.round(cropData.total_earned)}</td>
+                <td>{Math.round(cropData.profit)}</td>
                 <td>{cropData.fertilizer ? nameNormalizer(cropData.fertilizer.name) : "None"}</td>
                 <td>{cropData.crop.regrowth?cropData.crop.regrowth:"N/A"}</td>
                 <td>{nameNormalizer(cropData.prepType)}</td>
@@ -361,99 +455,6 @@ function calculatePrepTypeSellVal (crop, prepType, userOptions) {
         return {sellPrice: (2*price+50)*mul, name: `${name}_${cropType==="fruit" ? "jelly" : "pickel"}`, time: 2}; 
     }
 
-}
-
-const updateCalendarData = (dayNumber, crop, numberOfCrops, fertilizerType, prepType, calendarSquares, setCalendarSquares, userOptions, seasonIndex) => {
-    // WILL ADD PREP TIME LATER
-    const BaseSell = calculatePrepTypeSellVal(crop, prepType, userOptions);
-    const newPlantAdd = {
-        crop: crop,
-        dayPlanted: dayNumber,
-        numberPlanted: numberOfCrops,
-        fertilizer: fertilizerType,
-        id: `${seasonIndex}-plant-${dayNumber}-${calendarSquares[seasonIndex][dayNumber-1].planted_crops.length}-${plantPairID}`,
-        plant_harvest_id: plantPairID,
-        prepType: prepType,
-        processingTime: BaseSell.time
-    }; // data for new plant added (planting)
-    const {farmingLevel, tillerProf} = userOptions;
-    const sellValue = prepType !== "normal" ? BaseSell.sellPrice * numberOfCrops : Math.floor(priceCalculate(BaseSell.sellPrice, numberOfCrops, farmingLevel, fertilizerType, tillerProf));
-    const newHarvestAdd = {
-        crop: crop,
-        numberPlanted: numberOfCrops,
-        dayPlanted: dayNumber,
-        fertilizer: fertilizerType,
-        total_earned: sellValue,
-        profit: sellValue-crop.seed_price*numberOfCrops,
-        id: `${seasonIndex}-harvest-${dayNumber}-${calendarSquares[seasonIndex][dayNumber-1].planted_crops.length}-${plantPairID}`,
-        plant_harvest_id: plantPairID,
-        prepType: prepType,
-        cropType: BaseSell.name,
-        processingTime: BaseSell.time
-    }; // to be displayed in popup
-    plantPairID++; 
-    // keep making new plant-harvest id's for quick access
-    
-    AddCrop(seasonIndex, calendarSquares, setCalendarSquares, newPlantAdd, newHarvestAdd, dayNumber, fertilizerType, userOptions);
-}
-function AddCrop (seasonIndex, wholeCalendar, setWholeCalendar, newPlantAdd, newHarvestAdd, dayNumber, fertilizerType, userOptions) {
-    const seasons = ["spring", "summer", "fall", "winter"];
-    let currSeasonIndex = seasonIndex;
-    const newSquares = [...wholeCalendar]; // updating whole year
-    const plantSquare = {...newSquares[currSeasonIndex][dayNumber-1]}; // copies whole object at that square
-
-    plantSquare.planted_crops = [...plantSquare.planted_crops, newPlantAdd]; // add new plant info
-    newSquares[currSeasonIndex][dayNumber-1] = plantSquare;
-
-    const {daysToGrow, regrowth} = newPlantAdd.crop;
-    const {crop: {season}} = newPlantAdd; // see seasons crop can grow in
-    
-    const availableSeasons = season.slice(season.indexOf(seasons[seasonIndex]), season.length); // includes available seasons can grow in after the current
-
-    let daysToFirstGrow = daysToGrow; 
-    if (fertilizerType && fertilizerType.type === "speed_grow") {
-        daysToFirstGrow=Math.floor(daysToFirstGrow*fertilizerType.multiplier); // fertilizer
-    }
-    if (userOptions.agricProf) {
-        daysToFirstGrow=Math.floor(daysToFirstGrow*0.9); // agriculture profession
-    }
-
-    let dayCounter = daysToFirstGrow+dayNumber-1;
-
-    if (dayCounter > 27 && availableSeasons.length < 2) { // no available seasons to go on
-        setWholeCalendar(newSquares);
-        return;
-    }
-
-    if (dayCounter > 27) {
-        // has available season to go on
-        currSeasonIndex ++; // now targets season ahead
-        availableSeasons.shift();
-    }
-
-    dayCounter = dayCounter % 28; // make sure it fits inside length 
-    
-    const newHarvestSquare = {...newSquares[currSeasonIndex][dayCounter]};
-    newHarvestSquare.harvest_crops = [...newHarvestSquare.harvest_crops, newHarvestAdd];
-    newSquares[currSeasonIndex][dayCounter] = newHarvestSquare;
-
-    if (regrowth) {
-        dayCounter += regrowth;
-        while (dayCounter <= 27) {
-            const regrowthSquare = {...newSquares[currSeasonIndex][dayCounter]};
-            regrowthSquare.harvest_crops=[...regrowthSquare.harvest_crops, newHarvestAdd];
-            newSquares[currSeasonIndex][dayCounter] = regrowthSquare;
-            dayCounter+=regrowth;
-            if (dayCounter > 27 && availableSeasons.length > 1) {
-                // available seasons to go into
-                currSeasonIndex++;
-                dayCounter = dayCounter % 28;
-                availableSeasons.shift();
-            }
-        }
-    }
-
-    setWholeCalendar(newSquares);
 }
 function SelectCropType ({season, cropData, setCropSelected, cropSelected}) {
     // return all crops with correct season
