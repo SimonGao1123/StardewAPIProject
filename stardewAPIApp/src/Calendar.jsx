@@ -86,7 +86,6 @@ function AddCropPopUp ({seasonIndex, cropEdit, setCropEdit, setDaySelected, dayN
         }
 
     }, [cropEdit]);
-    console.log(cropEdit);
 
     const fertilizerOptions = [];
     for (const fertilizer of fertilizerData) {

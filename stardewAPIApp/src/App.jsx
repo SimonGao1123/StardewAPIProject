@@ -52,7 +52,6 @@ export default function App () {
       }); // adds buy prices to seeds
       combinedData.pop(); // remove cactus fruit
       setCropData(combinedData); // set the crop data to data
-      console.log(combinedData);
     })
     .catch (error => {
       console.log("Error: " + error); // catch and log any errors
@@ -93,7 +92,7 @@ export default function App () {
       <button onClick={()=>{
         localStorage.clear();
         window.location.reload(); // clears local storage and reloads window
-        }}>RESET</button>
+        }}>RESET DATA</button>
     </>
   );
 } 
