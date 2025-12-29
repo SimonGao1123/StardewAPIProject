@@ -11,8 +11,9 @@ export default function Calendar ({currCalendar, wholeCalendar, setWholeCalendar
     return (
     <>
         {dayNumberSelected ? <AddCropPopUp seasonIndex = {seasonIndex} cropEdit={cropEdit} setCropEdit={setCropEdit} setDaySelected={setDaySelected} dayNumber={dayNumberSelected} season={userOptions.season} cropData={cropData} calendarSquares={wholeCalendar} setCalendarSquares={setWholeCalendar} fertilizerData={fertilizerData} userOptions={userOptions}/> 
-        : <p>No Day Selected</p>}
+        : null}
         {CalendarDisplay}
+        {!dayNumberSelected && <p className="no-day-selected">Select a day to add crops</p>}
     </>
     );
     // TEST ONLY FOR DAY 1 CALENDAR SQUARE SO FAR
@@ -86,7 +87,6 @@ function AddCropPopUp ({seasonIndex, cropEdit, setCropEdit, setDaySelected, dayN
         }
 
     }, [cropEdit]);
-    console.log(cropEdit);
 
     const fertilizerOptions = [];
     for (const fertilizer of fertilizerData) {
@@ -104,15 +104,18 @@ function AddCropPopUp ({seasonIndex, cropEdit, setCropEdit, setDaySelected, dayN
 
 
             <div id="crop-query-popup">
+                <h3>Crop Selection</h3>
                 <SelectCropType season={season} cropData={cropData} setCropSelected={setCropSelected} cropSelected={cropSelected}/>
                 <label htmlFor="number_of_crops">Number of Crops</label>
                 <input id="number_of_crops" type="number" min="1" step="1" value={numberOfCrops} onChange={(e) => setNumCrops(parseInt(e.target.value) || 1)}/> 
 
+                <h3>Fertilizer</h3>
                 <select id="fertilizer-select" value={fertSelected} onChange={(e) => setFertSelected(parseInt(e.target.value))}>
                     <option key={"none"} value={0}>None</option>
                     {fertilizerOptions}
                 </select>
 
+                <h3>Preparation Type</h3>
                 <select id="sell-type-select" value={prepMethod} onChange={(e) => setPrepMethod(e.target.value)}>
                     <option key={"normal"} value={"normal"}>Normal</option>
                     {cropSelected ? possibleSellMethods(cropData.find(crop=>{return crop.id===cropSelected})) : <></>}

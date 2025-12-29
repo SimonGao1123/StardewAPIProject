@@ -13,12 +13,12 @@ export default function InputSection ({currCalendar, wholeCalendar, userOptions,
                 <FarmingLevelSelect userOptions={userOptions} setUserOptions={setUserOptions}/>
             </div>
 
-            <div className="input-section-container" id="sprinklerSelection">
-                <SprinklerSelect currCalendar={currCalendar} userOptions={userOptions} setUserOptions={setUserOptions}/>
-            </div>
-
             <div className="input-section-container" id="professionSelection">
                 <ProfessionSelection userOptions={userOptions} setUserOptions={setUserOptions}/>
+            </div>
+
+            <div className="input-section-container" id="sprinklerSelection">
+                <SprinklerSelect currCalendar={currCalendar} userOptions={userOptions} setUserOptions={setUserOptions}/>
             </div>
 
             <div className="input-section-container" id="kegspreservesSelection">
@@ -63,7 +63,6 @@ function FarmingLevelSelect ({userOptions, setUserOptions}) {
 // TODO: 
 // - cannot do without access to calendar input information (FIRST DO CALENDAR)
 // - need to update materials list for output object
-// TEMPORARY: THE AUTOFILL BUTTON JUST SETS 100 TO SELECTED  QUALITY (needs to take total # of crops and divide by respective sprinkler water yield)
 function SprinklerSelect ({currCalendar, userOptions, setUserOptions}) {
     function calculateTotalCrops(currCalendar) {
         if (!currCalendar || !Array.isArray(currCalendar)) return 0;
@@ -119,46 +118,56 @@ function ProfessionSelection ({userOptions, setUserOptions}) {
     if (userOptions.farmingLevel < 10 && (userOptions.agricProf || userOptions.artisanProf)) {
         setUserOptions({...userOptions, agricProf: false, artisanProf: false});
     }
-    const tillerProfession = (<><label htmlFor="tiller-profession">Tiller Profession (+10% Sell Value for Crops)</label>
-            <input id="tiller-profession" type="checkbox" checked={userOptions.tillerProf}
-            onChange={(e) => {
-                setUserOptions({...userOptions, tillerProf: e.target.checked});
-            }}/></>);
-        
-    const artisanOrAgriculture = (<><label htmlFor="artisan-profession">Artisan Profession (+40% Sell Value for Wine/Jam/Pickels)</label>
-            <input id="artisan-profession" type="radio" name="artisan-or-agriculture" 
-            onChange={(e) => {
-                if (e.target.checked) {
-                    setUserOptions({...userOptions, agricProf: false, artisanProf: true});
-                }
-            }}/>
-
-            <label htmlFor="agriculture-profession">Agrilcurist Profession (-10% growth time)</label>
-            <input id="agriculture-profession" type="radio" name="artisan-or-agriculture" 
-            onChange={(e) => {
-                if (e.target.checked) {
-                    setUserOptions({...userOptions, agricProf: true, artisanProf: false});
-                }
-            }}/>
-
-            <label htmlFor="none-profession">None</label>
-            <input id="none-profession" type="radio" name="artisan-or-agriculture" 
-            onChange={(e) => {
-                if (e.target.checked) {
-                    setUserOptions({...userOptions, agricProf: false, artisanProf: false});
-                }
-            }}/></>);
 
     return (
         <>
-            {userOptions.farmingLevel >= 5 ? tillerProfession : <></>}
-            {userOptions.farmingLevel === 10 ? artisanOrAgriculture : <></>}
-
+            {userOptions.farmingLevel >= 5 && (
+                <div className="profession-option">
+                    <input id="tiller-profession" type="checkbox" checked={userOptions.tillerProf}
+                    onChange={(e) => {
+                        setUserOptions({...userOptions, tillerProf: e.target.checked});
+                    }}/>
+                    <label htmlFor="tiller-profession">Tiller Profession (+10% Sell Value for Crops)</label>
+                </div>
+            )}
             
+            {userOptions.farmingLevel === 10 && (
+                <>
+                    <div className="profession-option">
+                        <input id="artisan-profession" type="radio" name="artisan-or-agriculture" checked={userOptions.artisanProf}
+                        onChange={(e) => {
+                            if (e.target.checked) {
+                                setUserOptions({...userOptions, agricProf: false, artisanProf: true});
+                            }
+                        }}/>
+                        <label htmlFor="artisan-profession">Artisan Profession (+40% Sell Value for Wine/Jam/Pickels)</label>
+                    </div>
+
+                    <div className="profession-option">
+                        <input id="agriculture-profession" type="radio" name="artisan-or-agriculture" checked={userOptions.agricProf}
+                        onChange={(e) => {
+                            if (e.target.checked) {
+                                setUserOptions({...userOptions, agricProf: true, artisanProf: false});
+                            }
+                        }}/>
+                        <label htmlFor="agriculture-profession">Agriculturist Profession (-10% growth time)</label>
+                    </div>
+
+                    <div className="profession-option">
+                        <input id="none-profession" type="radio" name="artisan-or-agriculture" checked={!userOptions.agricProf && !userOptions.artisanProf}
+                        onChange={(e) => {
+                            if (e.target.checked) {
+                                setUserOptions({...userOptions, agricProf: false, artisanProf: false});
+                            }
+                        }}/>
+                        <label htmlFor="none-profession">None</label>
+                    </div>
+                </>
+            )}
         </>
     );
-       
 }
+
 
 // TODO: ADD MATERIALS TO MAKE KEGS/ALCOHOL
 function KegsAndPreservesSelection ({userOptions, setUserOptions}) {
