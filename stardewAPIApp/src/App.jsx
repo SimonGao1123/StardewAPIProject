@@ -86,10 +86,24 @@ export default function App () {
 
   return (
     <>
-      <InputSection currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar} userOptions={userOptions} setUserOptions={setUserOptions}/>
-      <Calendar currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar} setWholeCalendar={setWholeCalendar} userOptions={userOptions} cropData={cropData} fertilizerData={fertilizerData} seasonIndex={seasonRef.indexOf(userOptions.season)}/>
-      <OutputSection cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData} userOptions={userOptions} currCalendar={wholeYearCalendar} seasonIndex={seasonRef.indexOf(userOptions.season)}/>
-      <button onClick={()=>{
+      <div className="app-top-section">
+        <div className="left-container">
+          <div id="input-section">
+            <h2>Farm Settings</h2>
+            <InputSection currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar} userOptions={userOptions} setUserOptions={setUserOptions}/>
+          </div>
+          <div id="output-section">
+            <h2>Farm Summary</h2>
+            <OutputSection cropData={cropData} sprinklerData={sprinklerData} fertilizerData={fertilizerData} userOptions={userOptions} currCalendar={wholeYearCalendar} seasonIndex={seasonRef.indexOf(userOptions.season)}/>
+          </div>
+        </div>
+        <div id="calendar-section">
+          <div className="calendar-grid">
+            <Calendar currCalendar={wholeYearCalendar[seasonRef.indexOf(userOptions.season)]} wholeCalendar={wholeYearCalendar} setWholeCalendar={setWholeCalendar} userOptions={userOptions} cropData={cropData} fertilizerData={fertilizerData} seasonIndex={seasonRef.indexOf(userOptions.season)}/>
+          </div>
+        </div>
+      </div>
+      <button id="reset-button" onClick={()=>{
         localStorage.clear();
         window.location.reload(); // clears local storage and reloads window
         }}>RESET DATA</button>
